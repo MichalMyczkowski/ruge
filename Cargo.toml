@@ -1,0 +1,7 @@
+[workspace]
+
+members = [
+    "game",
+    "microengine",
+    "gl_utils",
+]
