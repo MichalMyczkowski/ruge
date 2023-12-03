@@ -13,12 +13,20 @@ pub trait SystemEventFacade {
     /// Meant for polling events, updating window, input, and timer accordingly
     fn loop_start(
         &mut self,
-        window: &mut Window,
-        input: &mut Input,
-        timer: &mut Timer,
-    ) -> GameResult;
+        _window: &mut Window,
+        _input: &mut Input,
+        _timer: &mut Timer,
+    ) -> GameResult {
+        Ok(())
+    }
     /// Marks the end of game loop.
     /// Meant for updating window, input, and timer accordingly
-    fn loop_end(&mut self, window: &mut Window, input: &mut Input, timer: &mut Timer)
-        -> GameResult;
+    fn loop_end(
+        &mut self,
+        _window: &mut Window,
+        _input: &mut Input,
+        _timer: &mut Timer,
+    ) -> GameResult {
+        Ok(())
+    }
 }

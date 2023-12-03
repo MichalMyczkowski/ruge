@@ -764,7 +764,6 @@ impl SystemEventFacade for GLFWBackend {
                 WindowEvent::Pos(x, y) => {
                     window.system_set_pos(x as isize, y as isize);
                 }
-                WindowEvent::Close => window.system_close(),
                 _ => (),
             }
         }
@@ -810,6 +809,9 @@ impl SystemEventFacade for GLFWBackend {
                     None,
                 );
             }
+        }
+        if self.window.should_close() {
+            window.system_close();
         }
         timer.loop_end(&self.glfw);
         Ok(())

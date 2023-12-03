@@ -111,11 +111,13 @@ impl Scene {
         }
 
         // run updates
-        let mut not_finished = 0;
+        let mut finished = 0;
+        let mut all = 0;
         for layer in self.gameobjects.iter_mut() {
             for (id, go) in layer.iter_mut() {
+                all += 1;
                 if shutdown {
-                    not_finished += !go.finished_update(ctx)? as usize;
+                    finished += go.finished_update(ctx)? as usize;
                 } else {
                     go.update(ctx)?;
                 }
@@ -138,8 +140,7 @@ impl Scene {
                 go.draw(ctx)?;
             }
         }
-
-        Ok(not_finished == 0)
+        Ok(all == finished && shutdown)
     }
 }
 

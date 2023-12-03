@@ -1,5 +1,5 @@
 use crate::{
-    error::GameResult,
+    error::{GameError, GameResult},
     gameobject::{GameObject, GameObjectId},
     input::Input,
     scene::Scene,
@@ -14,8 +14,9 @@ pub struct Context {
     /// currently running scene
     /// moved to RefCell so you can push to Scene.new_gameobjects
     pub(crate) scene: Option<RefCell<Scene>>,
-    /// vector holding scenes created during runtime
-    new_scenes: RefCell<Vec<Scene>>,
+    // TODO! allow dynamic creation of scenes
+    // /// vector holding scenes created during runtime
+    // new_scenes: RefCell<Vec<Scene>>,
     /// Name of scene
     change_to: RefCell<Option<String>>,
     /// Active scene state
@@ -30,7 +31,7 @@ impl Context {
     pub(crate) fn new(time: Timer, window: Window) -> Self {
         Context {
             scene: None,
-            new_scenes: RefCell::new(Vec::new()),
+            // new_scenes: RefCell::new(Vec::new()),
             change_to: RefCell::new(None),
             transitioning: RefCell::new(false),
             time,
@@ -42,7 +43,6 @@ impl Context {
     /// Consumes given scene and use it as running scene
     /// If there was another scene running before, the ownership will be given back
     pub(crate) fn set_scene(&mut self, mut scene: Scene) -> GameResult<Option<Scene>> {
-        // TODO! probably here is a good place to run scene.start
         self.transitioning.replace(false);
         scene.start(&self)?;
         let s = self.scene.replace(RefCell::new(scene));
@@ -97,10 +97,11 @@ impl Context {
             }
             Ok(finished)
         } else {
-            panic!("no active scene to call run_loop on");
+            Err(GameError::GameLogicError(
+                "Trying to run scene without setting starting scene name!".into(),
+            ))
         }
     }
-    // TODO! make it possible to dynamically create scenes from gameobjects
 }
 
 impl Default for Context {
@@ -133,9 +134,9 @@ mod tests {
         let mut c = Context::default();
         let s = Scene::new("test1", 1, 1, true);
         let ss = Scene::new("test2", 1, 1, true);
-        let ret = c.set_scene(s);
+        let ret = c.set_scene(s).unwrap();
         assert!(ret.is_none());
-        let ret = c.set_scene(ss);
+        let ret = c.set_scene(ss).unwrap();
         assert_eq!(ret.unwrap().name, String::from("test1"));
     }
 

@@ -17,10 +17,13 @@ pub mod scene;
 mod timer;
 mod window;
 
+pub use event_handler::Backend;
 pub use game::{Game, GameConfig};
 pub use gameobject::{GameObject, GameObjectId};
 pub use input::keyboard::keys::KeyCode;
+pub use scene::Scene;
 pub use window::WindowConfig;
 
 // TODO: better document each module
 // TODO: test game module with mock backend
+// TODO: add fps upper limit

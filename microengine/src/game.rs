@@ -90,6 +90,10 @@ impl Game {
             Ok(())
         }
     }
+
+    pub fn set_starting_scene_name(&mut self, scene_name: &str) {
+        self.next_scene_name = Some(scene_name.into());
+    }
 }
 
 /// For now it's the only way to create a Game
@@ -109,3 +113,73 @@ impl From<GameConfig> for Game {
 }
 
 // TODO! implement mock backend and test Game struct
+#[cfg(test)]
+mod tests {
+    use crate::{input::Input, GameObject};
+
+    use super::*;
+    fn game_from_backend(backend: Box<dyn SystemEventFacade>) -> Game {
+        Game {
+            ctx: Default::default(),
+            scenes: Vec::new(),
+            ev_handler: backend,
+            next_scene_name: None,
+        }
+    }
+
+    struct DoNothingBackend;
+    impl SystemEventFacade for DoNothingBackend {}
+
+    struct RequestGameClose;
+    impl GameObject for RequestGameClose {
+        fn update(&mut self, ctx: &Context) -> GameResult {
+            ctx.window.close();
+            Ok(())
+        }
+        fn as_any(&self) -> &dyn std::any::Any {
+            self
+        }
+    }
+
+    #[test]
+    fn window_close_shutsdown_game() {
+        let backend = DoNothingBackend;
+        let mut g = game_from_backend(Box::new(backend));
+        let mut s = Scene::default();
+        _ = s.add_gameobject(RequestGameClose, 0);
+        g.set_starting_scene_name(&s.name);
+        _ = g.add_scene(s);
+        assert_eq!(true, g.run().is_ok())
+    }
+
+    struct SystemCloseBackend;
+    impl SystemEventFacade for SystemCloseBackend {
+        fn loop_start(
+            &mut self,
+            window: &mut Window,
+            _input: &mut Input,
+            _timer: &mut Timer,
+        ) -> GameResult {
+            window.system_close();
+            Ok(())
+        }
+    }
+
+    struct DoNothingGameObject;
+    impl GameObject for DoNothingGameObject {
+        fn as_any(&self) -> &dyn std::any::Any {
+            self
+        }
+    }
+
+    #[test]
+    fn window_system_close_shutsdown_game() {
+        let backend = SystemCloseBackend;
+        let mut g = game_from_backend(Box::new(backend));
+        let mut s = Scene::default();
+        _ = s.add_gameobject(DoNothingGameObject, 0);
+        g.set_starting_scene_name(&s.name);
+        _ = g.add_scene(s);
+        assert_eq!(true, g.run().is_ok())
+    }
+}

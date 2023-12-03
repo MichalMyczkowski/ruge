@@ -1,6 +1,25 @@
+[package]
+name = "ruge" #rust micro game engine
+version = "0.1.0"
+edition = "2021"
+
+
+
 [workspace]
 resolver = "2"
 members = [
     "microengine",
     "gl_utils",
 ]
+
+[dependencies]
+microengine = { path="./microengine" }
+gl_utils = { path="./gl_utils" }
+
+[[example]]
+name = "task_03"
+path = "examples/task_03/main.rs"
+
+[dev-dependencies]
+clap = { version = "4.4.10", features = ["derive"] }
+rng = "0.1.0"
