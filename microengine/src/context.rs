@@ -34,16 +34,17 @@ impl Context {
 
     /// Consumes given scene and use it as running scene
     /// If there was another scene running before, the ownership will be given back
-    pub(crate) fn set_scene(&mut self, scene: Scene) -> Option<Scene> {
+    pub(crate) fn set_scene(&mut self, mut scene: Scene) -> GameResult<Option<Scene>> {
         // TODO! probably here is a good place to run scene.start
         self.transitioning.replace(false);
+        scene.start(&self)?;
         let s = self.scene.replace(RefCell::new(scene));
         match s {
             Some(s) => {
                 // TODO? is there a better way to move out of refcell?
-                Some(s.replace(Scene::default()))
+                Ok(Some(s.replace(Scene::default())))
             },
-            None => None,
+            None => Ok(None),
         }
     }
 

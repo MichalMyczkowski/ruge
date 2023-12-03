@@ -63,8 +63,18 @@ impl Scene {
         }
     }
 
+    /// Method run each time the active scene is set to self 
+    pub fn start(&mut self, ctx: &Context) -> GameResult {
+        for layer in self.gameobjects.iter_mut() {
+            for (_, go) in layer.iter_mut() {
+                go.start(ctx)?;
+            }
+        }
+        Ok(())
+    }
 
-    /// All gameobject methods are being run here in this very method.
+
+    /// All gameobject methods are being run here in this very method (all but start())
     /// returns true if all gameobjects are finished.
     pub fn run_loop(&mut self, ctx: &Context, fixed_time_steps: usize, shutdown: bool) -> GameResult<bool> {
         // Add all newly created gameobjects
@@ -113,8 +123,6 @@ impl Scene {
         Ok(not_finished == 0)
 
     }
-
-
 }
 
 impl Default for Scene {

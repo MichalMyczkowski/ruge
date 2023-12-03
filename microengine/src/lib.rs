@@ -24,3 +24,8 @@ pub use input::keyboard::keys::KeyCode;
 pub use game::{Game, GameConfig};
 pub use window::WindowConfig;
 pub use gameobject::{GameObject, GameObjectId};
+
+
+
+// TODO: better document each module
+// TODO: test game module with mock backend

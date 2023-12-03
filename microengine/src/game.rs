@@ -13,6 +13,7 @@ pub struct GameConfig {
 
 pub struct Game {
     ctx: Context,
+    // TODO! change from Vec<Scene> to HashMap<String, Scene>
     scenes: Vec<Scene>,
     ev_handler: Box<dyn SystemEventFacade>,
     next_scene_name: Option<String>,
@@ -36,7 +37,7 @@ impl Game {
                 }
                 let idx = idx[0];
                 let scene = self.scenes.remove(idx);
-                if let Some(scene) = self.ctx.set_scene(scene) {
+                if let Some(scene) = self.ctx.set_scene(scene)? {
                     if !scene.disposable {
                         self.scenes.push(scene);
                     }
