@@ -16,7 +16,14 @@ pub struct WindowConfig {
 }
 
 impl WindowConfig {
-    fn new(name: &str, width: usize, height: usize, posx: isize, posy: isize, is_fullscreen: bool) -> Self {
+    fn new(
+        name: &str,
+        width: usize,
+        height: usize,
+        posx: isize,
+        posy: isize,
+        is_fullscreen: bool,
+    ) -> Self {
         WindowConfig {
             name: name.into(),
             width,
@@ -24,21 +31,13 @@ impl WindowConfig {
             posx,
             posy,
             is_fullscreen,
-
         }
     }
 }
 
 impl Default for WindowConfig {
     fn default() -> Self {
-        WindowConfig::new(
-            "default",
-            1280,
-            720,
-            0,
-            0,
-            false,
-        )
+        WindowConfig::new("default", 1280, 720, 0, 0, false)
     }
 }
 
@@ -50,13 +49,20 @@ pub struct Window {
     posy: isize,
     aspect_ratio: f64,
     is_fullscreen: bool,
-    pub(crate)fullscreen_requested: RefCell<bool>,
-    pub(crate)close_requested: RefCell<bool>,
+    pub(crate) fullscreen_requested: RefCell<bool>,
+    pub(crate) close_requested: RefCell<bool>,
     should_close: bool,
 }
 
 impl Window {
-    pub fn new(name: &str, width: usize, height: usize, posx: isize, posy: isize, is_fullscreen: bool) -> Self {
+    pub fn new(
+        name: &str,
+        width: usize,
+        height: usize,
+        posx: isize,
+        posy: isize,
+        is_fullscreen: bool,
+    ) -> Self {
         Window {
             name: String::from(name),
             should_close: false,
@@ -67,15 +73,15 @@ impl Window {
             height,
             posx,
             posy,
-            aspect_ratio: (height as f64)/(width as f64),
-        } 
+            aspect_ratio: (height as f64) / (width as f64),
+        }
     }
 
     /// Use it in backend everytime window resizes
     pub(crate) fn system_update_resolution(&mut self, width: usize, height: usize) {
         self.width = width;
         self.height = height;
-        self.aspect_ratio = (height as f64)/(width as f64);
+        self.aspect_ratio = (height as f64) / (width as f64);
     }
 
     /// Use it in backend implementations to indicate that window should close
@@ -94,12 +100,12 @@ impl Window {
     pub fn should_close(&self) -> bool {
         self.should_close
     }
-  
+
     /// Set or unset fullscreen
     pub fn set_fullscreen(&self, fullscreen: bool) {
         *self.fullscreen_requested.borrow_mut() = fullscreen;
     }
-  
+
     /// Use it to end the game.
     pub fn close(&self) {
         *self.close_requested.borrow_mut() = true;
@@ -129,9 +135,7 @@ impl Window {
     pub fn aspect_ratio(&self) -> f64 {
         self.aspect_ratio
     }
-
 }
-
 
 impl Default for Window {
     fn default() -> Self {
@@ -147,9 +151,9 @@ impl From<WindowConfig> for Window {
             height: value.height,
             posx: value.posx,
             posy: value.posy,
-            aspect_ratio: (value.height as f64)/(value.width as f64),
+            aspect_ratio: (value.height as f64) / (value.width as f64),
             is_fullscreen: value.is_fullscreen,
             ..Default::default()
-        }   
+        }
     }
 }

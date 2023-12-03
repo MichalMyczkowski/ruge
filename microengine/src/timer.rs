@@ -12,7 +12,6 @@ pub(crate) trait GetTime {
     fn get_timestamp(&self) -> f64;
 }
 
-
 impl Timer {
     pub(crate) fn new(fixed_fps: usize) -> Self {
         Timer {
@@ -20,7 +19,7 @@ impl Timer {
             fps: 0,
             loop_start_time: 0.0,
             /// default is 50 times per second
-            fixed_time_step: 1.0/(fixed_fps as f64),
+            fixed_time_step: 1.0 / (fixed_fps as f64),
             time_since_last_fixed_update: 0.0,
         }
     }
@@ -50,7 +49,7 @@ impl Timer {
 
     /// Returns delta_time, this is the only method GameObjects need
     pub fn delta_time(&self) -> f64 {
-        self.delta_time 
+        self.delta_time
     }
 
     pub fn fps(&self) -> u32 {
@@ -83,17 +82,16 @@ mod tests {
         }
     }
 
-
     struct FakeTimer;
     impl FakeTimer {
-        pub fn new() -> Self{
+        pub fn new() -> Self {
             reset_counter();
             FakeTimer {}
         }
     }
     impl GetTime for FakeTimer {
         fn get_timestamp(&self) -> f64 {
-            count_up() 
+            count_up()
         }
     }
 
@@ -123,7 +121,7 @@ mod tests {
         let get_time = FakeTimer::new();
         t.loop_start(&get_time);
         t.loop_end(&get_time);
-        assert_eq!(t.get_fixed_steps(), (1.0/t.fixed_time_step) as usize);
+        assert_eq!(t.get_fixed_steps(), (1.0 / t.fixed_time_step) as usize);
     }
 
     #[test]
@@ -133,7 +131,7 @@ mod tests {
         for _ in 0..10 {
             t.loop_start(&get_time);
             t.loop_end(&get_time);
-            assert_eq!(t.get_fixed_steps(), (1.0/t.fixed_time_step) as usize);
+            assert_eq!(t.get_fixed_steps(), (1.0 / t.fixed_time_step) as usize);
         }
     }
 }

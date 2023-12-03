@@ -141,7 +141,7 @@ impl From<KeyState> for bool {
     fn from(value: KeyState) -> Self {
         match value {
             KeyState::Down | KeyState::Pressed => true,
-            _ => false
+            _ => false,
         }
     }
 }

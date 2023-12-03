@@ -1,8 +1,8 @@
 //! Module providing struct used by Scene to manage gameobject IDs
 //! It is scene's job to ensure that all dropped gameobjects free their ID
 
-use std::iter;
 use crate::gameobject::GameObjectId;
+use std::iter;
 
 pub(crate) struct IdManager {
     taken: usize,
@@ -17,7 +17,9 @@ impl IdManager {
             id_pool: iter::repeat_with(|| {
                 cnt += 1;
                 cnt
-            }).take(max_ids).collect(),
+            })
+            .take(max_ids)
+            .collect(),
         }
     }
 
@@ -25,9 +27,9 @@ impl IdManager {
         match self.id_pool.pop() {
             Some(t) => {
                 self.taken += 1;
-                Ok(GameObjectId {layer, id: t})
-            },
-            None => Err("run out of GameObjectIds")
+                Ok(GameObjectId { layer, id: t })
+            }
+            None => Err("run out of GameObjectIds"),
         }
     }
 
@@ -44,15 +46,20 @@ impl IdManager {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
     use super::*;
+    use std::collections::HashMap;
 
     #[test]
     fn each_id_is_unique() {
         let max_ids = 20;
         let im = IdManager::new(max_ids);
         assert_eq!(
-            im.id_pool.iter().map(|&x| (x, 0)).collect::<HashMap<usize, usize>>().keys().count(),
+            im.id_pool
+                .iter()
+                .map(|&x| (x, 0))
+                .collect::<HashMap<usize, usize>>()
+                .keys()
+                .count(),
             max_ids
         );
     }

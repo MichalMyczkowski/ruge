@@ -19,7 +19,9 @@ impl fmt::Display for GameError {
             GameError::SceneError(ref name, ref s) => write!(f, "Scene '{name}' GameError: {s}"),
             GameError::GameLogicError(ref s) => write!(f, "GameLogic GameError: {}", s),
             GameError::BackendError(ref s) => write!(f, "Backend GameError: {}", s),
-            GameError::EngineError(ref s) => write!(f, "MicroEngine Error: {}\ni'm sorry :( ~dev", s),
+            GameError::EngineError(ref s) => {
+                write!(f, "MicroEngine Error: {}\ni'm sorry :( ~dev", s)
+            }
         }
     }
 }

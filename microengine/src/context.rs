@@ -1,5 +1,12 @@
+use crate::{
+    error::GameResult,
+    gameobject::{GameObject, GameObjectId},
+    input::Input,
+    scene::Scene,
+    timer::Timer,
+    window::Window,
+};
 use std::cell::RefCell;
-use crate::{scene::Scene, timer::Timer, window::Window, input::Input, error::GameResult, gameobject::{GameObject, GameObjectId}};
 
 /// Everything every gameobject should know about, grouped in a single struct
 /// Methods with immutable reference to self are meant to be used by gameobjects
@@ -9,7 +16,7 @@ pub struct Context {
     pub(crate) scene: Option<RefCell<Scene>>,
     /// vector holding scenes created during runtime
     new_scenes: RefCell<Vec<Scene>>,
-    /// Name of scene 
+    /// Name of scene
     change_to: RefCell<Option<String>>,
     /// Active scene state
     transitioning: RefCell<bool>,
@@ -43,7 +50,7 @@ impl Context {
             Some(s) => {
                 // TODO? is there a better way to move out of refcell?
                 Ok(Some(s.replace(Scene::default())))
-            },
+            }
             None => Ok(None),
         }
     }
@@ -53,9 +60,13 @@ impl Context {
     pub(crate) fn scene_should_change(&mut self) -> Option<String> {
         self.change_to.replace(None)
     }
-    
+
     /// Instantiates new gameobjects to currently running scene
-    pub fn instantiate<T: GameObject + 'static>(&self, gameobject: T, layer: usize) -> GameResult<GameObjectId> {
+    pub fn instantiate<T: GameObject + 'static>(
+        &self,
+        gameobject: T,
+        layer: usize,
+    ) -> GameResult<GameObjectId> {
         if let Some(ref s) = self.scene {
             s.borrow_mut().add_gameobject(gameobject, layer)
         } else {
@@ -64,7 +75,7 @@ impl Context {
     }
 
     /// Use it to transition to a scene pointed to by scene_name string
-    /// if active scene was already during transition to another, this method 
+    /// if active scene was already during transition to another, this method
     /// will change the transition destination to the scene pointed to by scene_name as it would normally
     /// and return name of a scene it was trying to transition to.
     pub fn change_scene(&self, scene_name: String) -> Option<String> {
@@ -76,8 +87,11 @@ impl Context {
     pub(crate) fn run_current_scene(&mut self) -> GameResult<bool> {
         if let Some(ref scene) = self.scene {
             let fixed_time_steps = self.time.get_fixed_steps();
-            let should_finish = *self.transitioning.borrow() || *self.window.close_requested.borrow();
-            let finished = scene.borrow_mut().run_loop(&self, fixed_time_steps, should_finish)?;
+            let should_finish =
+                *self.transitioning.borrow() || *self.window.close_requested.borrow();
+            let finished = scene
+                .borrow_mut()
+                .run_loop(&self, fixed_time_steps, should_finish)?;
             if *self.window.close_requested.borrow() && finished {
                 self.window.system_close();
             }
@@ -85,10 +99,8 @@ impl Context {
         } else {
             panic!("no active scene to call run_loop on");
         }
-
     }
     // TODO! make it possible to dynamically create scenes from gameobjects
-
 }
 
 impl Default for Context {
@@ -130,9 +142,10 @@ mod tests {
     #[test]
     fn informs_about_scene_change() {
         let mut c = Context::default();
-        { // in some gameobject.update()
-           let ctx = &c; 
-           ctx.change_scene(String::from("test_scene"));
+        {
+            // in some gameobject.update()
+            let ctx = &c;
+            ctx.change_scene(String::from("test_scene"));
         }
         assert!(c.scene_should_change().is_some_and(|x| x == "test_scene"));
     }
@@ -140,11 +153,12 @@ mod tests {
     #[test]
     fn scene_change_during_transition_changes_destination() {
         let mut c = Context::default();
-        { // in some gameobject.update()
-           let ctx = &c; 
-           ctx.change_scene(String::from("test_scene"));
-           let old_name = ctx.change_scene(String::from("test_scene2"));
-           assert!(old_name.is_some_and(|x| x == "test_scene"));
+        {
+            // in some gameobject.update()
+            let ctx = &c;
+            ctx.change_scene(String::from("test_scene"));
+            let old_name = ctx.change_scene(String::from("test_scene2"));
+            assert!(old_name.is_some_and(|x| x == "test_scene"));
         }
         assert!(c.scene_should_change().is_some_and(|x| x == "test_scene2"));
     }

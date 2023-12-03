@@ -4,11 +4,13 @@
 //#[cfg(test)]
 //mod tests;
 mod idmanager;
+use crate::{
+    context::Context,
+    error::{GameError, GameResult},
+    gameobject::{GameObject, GameObjectId},
+};
 use idmanager::IdManager;
 use std::{collections::HashMap, iter};
-use crate::{gameobject::{GameObject, GameObjectId}, error::{GameResult, GameError}, context::Context};
-
-
 
 pub struct Scene {
     /// Each scene name must be unique!
@@ -32,38 +34,51 @@ impl Scene {
             gameobjects: iter::repeat_with(|| HashMap::new()).take(layers).collect(),
             new_gameobjects: Vec::new(),
             dead_ids: Vec::new(),
-            disposable
+            disposable,
         }
     }
-    
+
     /// Returns a reference to gameobject with given id
     /// Reference can't be saved because GameObject could be dropped later,
     /// so use it everytime you need to reference another gameobject
     pub fn gameobject_by_id<T: 'static>(&self, id: &GameObjectId) -> Option<&T> {
-        self.gameobjects.get(id.layer)?.get(id)?.as_any().downcast_ref::<T>()
+        self.gameobjects
+            .get(id.layer)?
+            .get(id)?
+            .as_any()
+            .downcast_ref::<T>()
     }
-    
+
     /// Adds given gameobject to scene and returns its Id.
     /// [!WARNING]
     /// Use it while constructing scene and not while it's running!
-    pub fn add_gameobject<T: GameObject + 'static>(&mut self, gameobject: T, layer: usize) -> GameResult<GameObjectId> {
+    pub fn add_gameobject<T: GameObject + 'static>(
+        &mut self,
+        gameobject: T,
+        layer: usize,
+    ) -> GameResult<GameObjectId> {
         if layer >= self.layers {
-            Err(GameError::SceneError(self.name.clone(), format!("Layer does not exist: {}", layer)))
+            Err(GameError::SceneError(
+                self.name.clone(),
+                format!("Layer does not exist: {}", layer),
+            ))
         } else {
             let new_id = self.id_manager.get(layer);
             match new_id {
-                Ok(id) => { 
-                    self.new_gameobjects.push((id.clone(), Box::new(gameobject)));
+                Ok(id) => {
+                    self.new_gameobjects
+                        .push((id.clone(), Box::new(gameobject)));
                     Ok(id)
-                },
-                Err(_) => {
-                    Err(GameError::SceneError(self.name.clone(), format!("Attempting to create over max_gameobject_count gameobjects")))
                 }
+                Err(_) => Err(GameError::SceneError(
+                    self.name.clone(),
+                    format!("Attempting to create over max_gameobject_count gameobjects"),
+                )),
             }
         }
     }
 
-    /// Method run each time the active scene is set to self 
+    /// Method run each time the active scene is set to self
     pub fn start(&mut self, ctx: &Context) -> GameResult {
         for layer in self.gameobjects.iter_mut() {
             for (_, go) in layer.iter_mut() {
@@ -73,10 +88,14 @@ impl Scene {
         Ok(())
     }
 
-
     /// All gameobject methods are being run here in this very method (all but start())
     /// returns true if all gameobjects are finished.
-    pub fn run_loop(&mut self, ctx: &Context, fixed_time_steps: usize, shutdown: bool) -> GameResult<bool> {
+    pub fn run_loop(
+        &mut self,
+        ctx: &Context,
+        fixed_time_steps: usize,
+        shutdown: bool,
+    ) -> GameResult<bool> {
         // Add all newly created gameobjects
         self.new_gameobjects.drain(..).for_each(|(id, go)| {
             self.gameobjects[id.layer].insert(id, go);
@@ -105,7 +124,7 @@ impl Scene {
                 }
             }
         }
-        
+
         // Delete all dead gameobjects
         self.dead_ids.iter().for_each(|id| {
             self.gameobjects[id.layer].remove(&id);
@@ -121,20 +140,22 @@ impl Scene {
         }
 
         Ok(not_finished == 0)
-
     }
 }
 
 impl Default for Scene {
     fn default() -> Self {
-       Scene::new("default", 2, 10, true) 
+        Scene::new("default", 2, 10, true)
     }
 }
 
 // TODO! Move this module into scene/tests.rs
 #[cfg(test)]
 mod tests {
-    use std::{rc::{Weak, Rc}, cell::RefCell};
+    use std::{
+        cell::RefCell,
+        rc::{Rc, Weak},
+    };
 
     use super::*;
     use crate::context::Context;
@@ -146,10 +167,14 @@ mod tests {
 
     impl TestGO {
         pub fn new(x: u32, y: u32) -> Self {
-            TestGO { x, y, }
+            TestGO { x, y }
         }
-        pub fn x(&self) -> u32 { self.x }
-        pub fn y(&self) -> u32 { self.y }
+        pub fn x(&self) -> u32 {
+            self.x
+        }
+        pub fn y(&self) -> u32 {
+            self.y
+        }
     }
 
     impl GameObject for TestGO {
@@ -183,7 +208,6 @@ mod tests {
         assert_eq!(true, err.is_err());
     }
 
-   
     struct TestDrop {
         pub dropped: Weak<RefCell<bool>>,
     }
@@ -206,7 +230,9 @@ mod tests {
     #[test]
     fn gameobjects_are_dropped_if_dead() {
         let is_dropped = Rc::new(RefCell::new(false));
-        let td = TestDrop { dropped: Rc::downgrade(&is_dropped) };
+        let td = TestDrop {
+            dropped: Rc::downgrade(&is_dropped),
+        };
         let mut scene = empty_scene(10);
         let ctx = Context::default();
         _ = scene.add_gameobject(td, 0);
@@ -247,7 +273,6 @@ mod tests {
         assert_eq!(true, finished);
     }
 
-
     struct FixedUpdateCheck(usize);
     impl GameObject for FixedUpdateCheck {
         fn fixed_update(&mut self, _ctx: &Context) -> GameResult {
@@ -271,5 +296,4 @@ mod tests {
             assert_eq!(3, go.0);
         }
     }
-
 }

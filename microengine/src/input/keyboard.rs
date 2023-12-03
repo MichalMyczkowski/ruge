@@ -12,7 +12,11 @@ pub struct KeyBoard {
 /// KeyBoard events should be updated here by SystemEventFacade implementations
 impl KeyBoard {
     pub(crate) fn new() -> Self {
-        KeyBoard { keys: iter::repeat_with(|| KeyState::NotPressed).take(NUM_KEYS).collect() }
+        KeyBoard {
+            keys: iter::repeat_with(|| KeyState::NotPressed)
+                .take(NUM_KEYS)
+                .collect(),
+        }
     }
 
     /// Change key state to KeyState::Down
@@ -29,8 +33,8 @@ impl KeyBoard {
     pub(crate) fn release_key(&mut self, key: KeyCode) {
         self.keys[key as usize] = KeyState::Up;
     }
-    
-    /// updates all keys released in last frame to KeyState::NotPressed 
+
+    /// updates all keys released in last frame to KeyState::NotPressed
     /// and all keys pressed in last frame to KeyState::Pressed
     pub(crate) fn update_key_state(&mut self) {
         self.keys.iter_mut().for_each(|k| {
@@ -41,10 +45,10 @@ impl KeyBoard {
             };
         });
     }
-    
+
     /// Returns true during the frame the user starts pressing down the key identified by KeyCode.
     pub fn get_key_down(&self, key: KeyCode) -> bool {
-        match self.keys[key as usize] { 
+        match self.keys[key as usize] {
             KeyState::Down => true,
             _ => false,
         }
@@ -52,7 +56,7 @@ impl KeyBoard {
 
     /// Returns true during the frame the user releases the key identified by KeyCode.
     pub fn get_key_up(&self, key: KeyCode) -> bool {
-        match self.keys[key as usize] { 
+        match self.keys[key as usize] {
             KeyState::Up => true,
             _ => false,
         }
@@ -60,12 +64,11 @@ impl KeyBoard {
 
     /// Returns true while the user holds down the key identified by KeyCode.
     pub fn get_key(&self, key: KeyCode) -> bool {
-        match self.keys[key as usize] { 
+        match self.keys[key as usize] {
             KeyState::Pressed => true,
             _ => false,
         }
     }
-
 }
 
 impl Default for KeyBoard {
@@ -73,7 +76,6 @@ impl Default for KeyBoard {
         KeyBoard::new()
     }
 }
-
 
 #[cfg(test)]
 mod tests {
