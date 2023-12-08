@@ -46,6 +46,13 @@ impl GLFWBackend {
             Some((mut w, events)) => {
                 w.set_pos(window.pos().0 as i32, window.pos().1 as i32);
                 gl::load_with(|s| w.get_proc_address(s) as *const _);
+                // TODO: do i need this?
+                unsafe {
+                    gl::Enable(gl::BLEND);
+                    gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+                    gl::ClearColor(0.1, 0.1, 0.1, 1.0);
+                    gl::Viewport(0, 0, window.width() as i32, window.height() as i32);
+                }
                 w.set_key_polling(true);
                 w.make_current();
                 GLFWBackend {
@@ -74,6 +81,9 @@ impl SystemEventFacade for GLFWBackend {
         timer: &mut Timer,
     ) -> GameResult {
         timer.loop_start(&self.glfw);
+        unsafe {
+            gl::Clear(gl::COLOR_BUFFER_BIT);
+        }
         self.glfw.poll_events();
         for (_, event) in glfw::flush_messages(&self.events) {
             match event {
@@ -753,19 +763,20 @@ impl SystemEventFacade for GLFWBackend {
                     input.kb.release_key(KeyCode::KeyUnknown)
                 }
                 // TODO! Mouse input events
-                // Window Events
-                // TODO? Should we check if window gets resized?
-                WindowEvent::FramebufferSize(w, h) => {
-                    window.system_update_resolution(w as usize, h as usize);
-                    unsafe {
-                        gl::Viewport(0, 0, w, h);
-                    }
-                }
-                WindowEvent::Pos(x, y) => {
-                    window.system_set_pos(x as isize, y as isize);
-                }
                 _ => (),
             }
+        }
+        // Somehow window events are ignored and we need to check them manually
+        let (w, h) = self.window.get_framebuffer_size();
+        if (w as usize, h as usize) != (window.width(), window.height()) {
+            window.system_update_resolution(w as usize, h as usize);
+            unsafe {
+                gl::Viewport(0, 0, w, h);
+            }
+        }
+        let (x, y) = self.window.get_pos();
+        if (x as isize, y as isize) != window.pos() {
+            window.system_set_pos(x as isize, y as isize);
         }
 
         Ok(())

@@ -1,29 +1,31 @@
 //! Provides GameObject trait which handles gameloop events
+use crate::Scene;
 use crate::context::Context;
 use crate::error::GameResult;
 use std::any::Any;
 
-#[derive(Hash, Clone, PartialEq, Eq)]
+#[derive(Hash, Clone, Copy, PartialEq, Eq)]
 pub struct GameObjectId {
     pub(crate) layer: usize,
+    pub(crate) idx: usize,
     pub(crate) id: usize,
 }
 
 pub trait GameObject {
-    /// start is executed only on scene start
-    /// it will not be executed on any gameobject created after scene starts
-    fn start(&mut self, _ctx: &Context) -> GameResult {
+    /// start is executed when gameobejct is added to scene
+    /// its id is given as one of the arguments, so it can be used later.
+    fn start(&mut self, _ctx: &Context, _scene: &Scene, id: GameObjectId) -> GameResult {
         Ok(())
     }
 
     /// function called every frame
-    fn update(&mut self, _ctx: &Context) -> GameResult {
+    fn update(&mut self, _ctx: &Context, _scene: &Scene) -> GameResult {
         Ok(())
     }
 
     /// function simulating fixed time step
     /// default time step is 1/50s but it is configurable with GameConf
-    fn fixed_update(&mut self, _ctx: &Context) -> GameResult {
+    fn fixed_update(&mut self, _ctx: &Context, _scene: &Scene) -> GameResult {
         Ok(())
     }
 
@@ -32,16 +34,9 @@ pub trait GameObject {
         false
     }
 
-    /// update but is called on scene change or game end
-    /// scene will change only after all gameobjects return true from finished_update
-    /// Use it for elegant shut down (animations and such)
-    fn finished_update(&mut self, _ctx: &Context) -> GameResult<bool> {
-        Ok(true)
-    }
-
     /// last method called in every gameloop
     /// use it to draw to screen
-    fn draw(&mut self, _ctx: &Context) -> GameResult {
+    fn draw(&mut self, _ctx: &Context, _scene: &Scene) -> GameResult {
         Ok(())
     }
 

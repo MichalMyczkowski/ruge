@@ -98,7 +98,7 @@ impl Window {
     /// Function indicates that either system requested to close window
     /// or user called window.close() and active scene has finished
     pub fn should_close(&self) -> bool {
-        self.should_close
+        self.should_close || *self.close_requested.borrow()
     }
 
     /// Set or unset fullscreen

@@ -2,6 +2,8 @@
 //! methods implemented on Game are responsible for compositing (holding and switching between)
 //! scenes, polling provided backend and what's most important: running your game!
 //!
+use std::collections::HashMap;
+
 use crate::{
     context::Context,
     error::{GameError, GameResult},
@@ -20,8 +22,7 @@ pub struct GameConfig {
 
 pub struct Game {
     ctx: Context,
-    // TODO! change from Vec<Scene> to HashMap<String, Scene>
-    scenes: Vec<Scene>,
+    scenes: HashMap<String, Scene>,
     ev_handler: Box<dyn SystemEventFacade>,
     next_scene_name: Option<String>,
 }
@@ -29,44 +30,51 @@ pub struct Game {
 impl Game {
     /// Pretty self explanatory
     pub fn run(&mut self) -> GameResult {
+        let mut active_scene: Option<Scene> = None;
         while !self.ctx.window.should_close() {
             self.ev_handler.loop_start(
                 &mut self.ctx.window,
                 &mut self.ctx.input,
                 &mut self.ctx.time,
             )?;
-            if self.next_scene_name.is_some() {
-                let name = self.next_scene_name.take().unwrap();
-                // TODO! add scenes from ctx (created at runtime) to self.scenes first
-                let idx: Vec<usize> = self
-                    .scenes
-                    .iter()
-                    .enumerate()
-                    .filter(|(_, s)| s.name == name)
-                    .map(|(idx, _)| idx)
-                    .collect();
-                if idx.len() == 0 {
-                    return Err(GameError::GameLogicError(format!(
-                        "Trying to transition to non existent scene: {}",
-                        name
-                    )));
-                } else if idx.len() > 1 {
-                    return Err(GameError::GameLogicError(format!(
-                        "There are more than one scene with name: {}",
-                        name
-                    )));
+            if let Some(ref name) = self.next_scene_name.take() {
+                if !self.scenes.contains_key(name) {
+                    return Err(GameError::GameLogicError(format!("There is no scene named: {name}")));
                 }
-                let idx = idx[0];
-                let scene = self.scenes.remove(idx);
-                if let Some(scene) = self.ctx.set_scene(scene)? {
-                    if !scene.disposable {
-                        self.scenes.push(scene);
+                let prev_scene = active_scene.replace(
+                    self.scenes.remove(name).unwrap()
+                );
+                if let Some(s) = prev_scene {
+                    if !s.disposable {
+                        let s = self.scenes.insert(s.name.clone(), s);
+                        if let Some(s) = s {
+                            return Err(
+                                GameError::GameLogicError(
+                                    format!(
+                                        "Can't add more than one scene with name: {}",
+                                        s.name
+                                    )
+                                )
+                            )
+                        }
                     }
                 }
             }
-
-            if self.ctx.run_current_scene()? {
-                self.next_scene_name = self.ctx.scene_should_change();
+            
+            // RUN SCENE
+            // UPDATE SCENES (add dynamically created scenes)
+            match active_scene {
+                Some(ref mut scene) => {
+                    scene.run_loop(&mut self.ctx)?;
+                    // TODO!
+                    // GET ALL DYNAMICALLY CREATED SCENES FROM SCENE!
+                    // CHECK IF SCENE SHOULD CHANGE ( scene.should_change()-> Option<String> )
+                },
+                None => {
+                    return Err(
+                        GameError::GameLogicError("Trying to run game without setting starting scene first!".into())
+                    );
+                }
             }
 
             self.ev_handler.loop_end(
@@ -77,23 +85,30 @@ impl Game {
         }
         Ok(())
     }
-
+    
+    /// Adds given scene to the game.
     /// Use this method to compose your game!
     pub fn add_scene(&mut self, scene: Scene) -> GameResult {
-        if self.scenes.iter().filter(|s| s.name == scene.name).count() != 0 {
-            Err(GameError::GameLogicError(format!(
-                "Can't add more than one scene with name: {}",
-                scene.name
-            )))
-        } else {
-            self.scenes.push(scene);
-            Ok(())
+        let s = self.scenes.insert(scene.name.clone(), scene);
+        match s {
+            Some(s) => {
+                Err(
+                    GameError::GameLogicError(
+                        format!(
+                            "Can't add more than one scene with name: {}",
+                            s.name
+                        )
+                    )
+                )
+            },
+            None => Ok(()),
         }
     }
 
     pub fn set_starting_scene_name(&mut self, scene_name: &str) {
         self.next_scene_name = Some(scene_name.into());
     }
+
 }
 
 /// For now it's the only way to create a Game
@@ -105,7 +120,7 @@ impl From<GameConfig> for Game {
         };
         Game {
             ctx: Context::new(Timer::new(value.fixed_fps), window),
-            scenes: Vec::new(),
+            scenes: HashMap::new(),
             ev_handler: Box::new(backend),
             next_scene_name: Some(value.starting_scene_name),
         }
@@ -121,7 +136,7 @@ mod tests {
     fn game_from_backend(backend: Box<dyn SystemEventFacade>) -> Game {
         Game {
             ctx: Default::default(),
-            scenes: Vec::new(),
+            scenes: HashMap::new(),
             ev_handler: backend,
             next_scene_name: None,
         }
@@ -132,7 +147,7 @@ mod tests {
 
     struct RequestGameClose;
     impl GameObject for RequestGameClose {
-        fn update(&mut self, ctx: &Context) -> GameResult {
+        fn update(&mut self, ctx: &Context, _scene: &Scene) -> GameResult {
             ctx.window.close();
             Ok(())
         }

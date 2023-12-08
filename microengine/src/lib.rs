@@ -27,3 +27,4 @@ pub use window::WindowConfig;
 // TODO: better document each module
 // TODO: test game module with mock backend
 // TODO: add fps upper limit
+// TODO: How do you even get other gameobjects?

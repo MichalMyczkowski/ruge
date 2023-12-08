@@ -46,6 +46,11 @@ impl Timer {
             0
         }
     }
+    
+    /// Returns frame start timestamp.
+    pub fn get_timestamp(&self) -> f64 {
+        self.loop_start_time
+    }
 
     /// Returns delta_time, this is the only method GameObjects need
     pub fn delta_time(&self) -> f64 {
