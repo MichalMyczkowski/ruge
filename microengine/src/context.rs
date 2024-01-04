@@ -1,8 +1,4 @@
-use crate::{
-    input::Input,
-    timer::Timer,
-    window::Window,
-};
+use crate::{input::Input, timer::Timer, window::Window};
 
 /// Everything every gameobject should know about, grouped in a single struct
 /// Methods with immutable reference to self are meant to be used by gameobjects
@@ -20,8 +16,6 @@ impl Context {
             input: Default::default(),
         }
     }
-
-
 }
 
 impl Default for Context {

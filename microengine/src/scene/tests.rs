@@ -4,7 +4,10 @@ use std::{
 };
 
 use super::*;
-use crate::{context::Context, timer::{Timer, GetTime}};
+use crate::{
+    context::Context,
+    timer::{GetTime, Timer},
+};
 
 struct TestGO {
     x: u32,
@@ -122,7 +125,7 @@ impl GameObject for FixedUpdateCheck {
 }
 
 struct MockGetTime {
-    time: RefCell<f64>
+    time: RefCell<f64>,
 }
 impl GetTime for MockGetTime {
     fn get_timestamp(&self) -> f64 {
@@ -135,7 +138,9 @@ impl GetTime for MockGetTime {
 fn scene_runs_fixed_update_n_times() {
     let mut scene = empty_scene(1);
     let mut t = Timer::new(50);
-    let gt = MockGetTime { time: RefCell::new(0.0) };
+    let gt = MockGetTime {
+        time: RefCell::new(0.0),
+    };
     let mut ctx = Context::default();
     t.loop_start(&gt);
     t.loop_end(&gt);

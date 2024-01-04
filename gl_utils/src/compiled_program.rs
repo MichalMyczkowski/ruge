@@ -4,12 +4,13 @@ use gl::types::*;
 use program::{Program, Shader};
 use std::fs::File;
 use std::io::read_to_string;
+use std::iter;
 
 pub struct CompiledProgram {
     program: Program,
     vao_id: GLuint,
     vbo_id: GLuint,
-    ebo_id: GLuint, //??
+    ebo_id: GLuint,
 }
 
 impl CompiledProgram {
@@ -21,8 +22,8 @@ impl CompiledProgram {
         unsafe {
             gl::GenVertexArrays(1, &mut vao_id);
             gl::BindVertexArray(vao_id);
-            gl::GenBuffers(1, &mut vbo_id);
             gl::GenBuffers(1, &mut ebo_id);
+            gl::GenBuffers(1, &mut vbo_id);
         }
         CompiledProgram {
             program,

@@ -1,9 +1,9 @@
 //! Scenes are basic building blocks of your game in microengine.
 //! They are basically dynamic sets of gameobjects representing what is going on right now
 
+pub(crate) mod idmanager;
 #[cfg(test)]
 mod tests;
-pub(crate) mod idmanager;
 
 use crate::{
     context::Context,
@@ -11,7 +11,7 @@ use crate::{
     gameobject::{GameObject, GameObjectId},
 };
 use idmanager::IdManager;
-use std::{collections::HashMap, iter, cell::RefCell};
+use std::{cell::RefCell, collections::HashMap, iter};
 
 pub struct Scene {
     /// Each scene name must be unique!
@@ -48,7 +48,7 @@ impl Scene {
         for layer in self.gameobjects.iter() {
             match layer.get(&id.id) {
                 Some(Some(ref go)) => return Some((*go).as_any().downcast_ref::<T>().unwrap()),
-                _ => continue, 
+                _ => continue,
             }
         }
         None
@@ -67,7 +67,9 @@ impl Scene {
             ))
         } else {
             let new_id = self.id_manager.borrow_mut().get(layer)?;
-            self.new_gameobjects.borrow_mut().push((new_id, Box::new(gameobject)));
+            self.new_gameobjects
+                .borrow_mut()
+                .push((new_id, Box::new(gameobject)));
             Ok(new_id)
         }
     }
@@ -75,7 +77,8 @@ impl Scene {
     /// Runs given closure on all gameobjects in scene.
     fn for_all_gameobjects<T>(&mut self, mut f: T) -> GameResult
     where
-    T: FnMut(GameObjectId, &mut Box<dyn GameObject>, &Scene) -> GameResult {
+        T: FnMut(GameObjectId, &mut Box<dyn GameObject>, &Scene) -> GameResult,
+    {
         // using for loops instead of mutable iterators
         // so there's no unnecessary mutable reference to scene
         for layer in 0..self.layers {
@@ -86,7 +89,11 @@ impl Scene {
                 let go = self.gameobjects[layer].remove(&id.id).unwrap();
                 let mut go = match go {
                     Some(g) => g,
-                    None => return Err(GameError::EngineError("Trying to process a missing gameobject".into())),
+                    None => {
+                        return Err(GameError::EngineError(
+                            "Trying to process a missing gameobject".into(),
+                        ))
+                    }
                 };
                 f(id, &mut go, &self)?;
                 self.gameobjects[layer].insert(id.id, Some(go));
@@ -97,10 +104,7 @@ impl Scene {
 
     /// All gameobject methods are being run here in this very method (all but start())
     /// returns true if all gameobjects are finished.
-    pub fn run_loop(
-        &mut self,
-        ctx: &mut Context,
-    ) -> GameResult {
+    pub fn run_loop(&mut self, ctx: &mut Context) -> GameResult {
         // add newly created gameobjects
         for (mut id, mut go) in self.new_gameobjects.borrow_mut().drain(..) {
             if id.layer >= self.layers {
@@ -127,7 +131,7 @@ impl Scene {
 
         // run update
         let mut dead_ids: Vec<GameObjectId> = Vec::new();
-        self.for_all_gameobjects(|id, go, scene| { 
+        self.for_all_gameobjects(|id, go, scene| {
             go.update(&ctx, scene)?;
             if go.is_dead() {
                 dead_ids.push(id);
@@ -147,14 +151,12 @@ impl Scene {
             self.gameobject_ids[id.layer].pop();
             self.gameobjects[id.layer].remove(&id.id);
             self.id_manager.borrow_mut().free(id);
-
         }
         // draw gameobjects
         self.for_all_gameobjects(|_, go, scene| go.draw(&ctx, scene))?;
 
         Ok(())
     }
-
 }
 
 impl Default for Scene {

@@ -129,23 +129,6 @@ pub enum KeyCode {
     KeyLast,
 }
 
-#[derive(Clone, Copy)]
-pub enum KeyState {
-    Down,
-    Pressed,
-    Up,
-    NotPressed,
-}
-
-impl From<KeyState> for bool {
-    fn from(value: KeyState) -> Self {
-        match value {
-            KeyState::Down | KeyState::Pressed => true,
-            _ => false,
-        }
-    }
-}
-
 impl From<KeyCode> for usize {
     fn from(value: KeyCode) -> Self {
         match value {

@@ -1,7 +1,7 @@
 //! Provides GameObject trait which handles gameloop events
-use crate::Scene;
 use crate::context::Context;
 use crate::error::GameResult;
+use crate::Scene;
 use std::any::Any;
 
 #[derive(Hash, Clone, Copy, PartialEq, Eq)]

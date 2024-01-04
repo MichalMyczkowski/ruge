@@ -2,10 +2,11 @@
 //! using OpenGL (gl crate) and GLFW (glfw crate)
 
 use crate::glfw::{Action, Context, Key};
+use crate::input::KeyState;
 use crate::timer::Timer;
 use crate::KeyCode;
 use crate::{error::GameResult, gl, glfw, input::Input, timer::GetTime, window::Window};
-use glfw::{Monitor, WindowEvent, WindowMode};
+use glfw::{Monitor, MouseButton, WindowEvent, WindowMode};
 
 use super::SystemEventFacade;
 
@@ -49,6 +50,7 @@ impl GLFWBackend {
                 // TODO: do i need this?
                 unsafe {
                     gl::Enable(gl::BLEND);
+                    gl::Enable(gl::DEPTH_TEST);
                     gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
                     gl::ClearColor(0.1, 0.1, 0.1, 1.0);
                     gl::Viewport(0, 0, window.width() as i32, window.height() as i32);
@@ -83,6 +85,7 @@ impl SystemEventFacade for GLFWBackend {
         timer.loop_start(&self.glfw);
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT);
+            gl::Clear(gl::DEPTH_BUFFER_BIT);
         }
         self.glfw.poll_events();
         for (_, event) in glfw::flush_messages(&self.events) {
@@ -762,22 +765,66 @@ impl SystemEventFacade for GLFWBackend {
                 WindowEvent::Key(Key::Unknown, _, Action::Release, _) => {
                     input.kb.release_key(KeyCode::KeyUnknown)
                 }
-                // TODO! Mouse input events
                 _ => (),
             }
         }
         // Somehow window events are ignored and we need to check them manually
-        let (w, h) = self.window.get_framebuffer_size();
-        if (w as usize, h as usize) != (window.width(), window.height()) {
-            window.system_update_resolution(w as usize, h as usize);
-            unsafe {
-                gl::Viewport(0, 0, w, h);
+        {
+            let (w, h) = self.window.get_framebuffer_size();
+            if (w as usize, h as usize) != (window.width(), window.height())
+                && !window.is_fullscreen
+            {
+                window.system_update_resolution(w as usize, h as usize);
+                window.system_update_resolution(260, 120);
+                unsafe {
+                    gl::Viewport(0, 0, w, h);
+                }
+            }
+            let (x, y) = self.window.get_pos();
+            if (x as isize, y as isize) != window.pos() && !window.is_fullscreen {
+                window.system_set_pos(x as isize, y as isize);
             }
         }
-        let (x, y) = self.window.get_pos();
-        if (x as isize, y as isize) != window.pos() {
-            window.system_set_pos(x as isize, y as isize);
+        // The same goes for Mouse input data
+        {
+            let (x, y) = self.window.get_cursor_pos();
+            let (x, y) = (x as f32, y as f32);
+            let (old_x, old_y) = input.mouse.position;
+            input.mouse.position = (x, y);
+            input.mouse.position_delta = (x - old_x, y - old_y);
+
+            let left_btn = self.window.get_mouse_button(MouseButton::Button1);
+            let right_btn = self.window.get_mouse_button(MouseButton::Button2);
+            let middle_btn = self.window.get_mouse_button(MouseButton::Button3);
+            match left_btn {
+                Action::Press => input
+                    .mouse
+                    .press_button(crate::input::mouse::MouseButton::Left),
+                Action::Release => input
+                    .mouse
+                    .release_button(crate::input::mouse::MouseButton::Left),
+                _ => (),
+            }
+            match right_btn {
+                Action::Press => input
+                    .mouse
+                    .press_button(crate::input::mouse::MouseButton::Right),
+                Action::Release => input
+                    .mouse
+                    .release_button(crate::input::mouse::MouseButton::Right),
+                _ => (),
+            }
+            match middle_btn {
+                Action::Press => input
+                    .mouse
+                    .press_button(crate::input::mouse::MouseButton::Middle),
+                Action::Release => input
+                    .mouse
+                    .release_button(crate::input::mouse::MouseButton::Middle),
+                _ => (),
+            }
         }
+        // TODO! Mouse scroll
 
         Ok(())
     }
@@ -788,8 +835,18 @@ impl SystemEventFacade for GLFWBackend {
         input: &mut Input,
         timer: &mut Timer,
     ) -> GameResult {
+        // Input changes handling
+        {
+            // TODO! Move this line to input update?
+            input.mouse.scroll_delta = (0.0, 0.0);
+            if input.mouse.is_cursor_visible() {
+                self.window.set_cursor_mode(glfw::CursorMode::Normal);
+            } else {
+                self.window.set_cursor_mode(glfw::CursorMode::Disabled);
+            }
+        }
+        // Window changes handling
         self.window.swap_buffers();
-        input.kb.update_key_state();
         {
             // fullscreen handling
             // TODO! fullscreen could just be read from window.is_fullscreen()
@@ -800,6 +857,7 @@ impl SystemEventFacade for GLFWBackend {
             });
             if *window.fullscreen_requested.borrow() && !fullscreen {
                 let vidmode = self.primary_monitor.get_video_mode().unwrap();
+                window.is_fullscreen = true;
                 self.window.set_monitor(
                     glfw::WindowMode::FullScreen(&self.primary_monitor),
                     0,
@@ -810,13 +868,13 @@ impl SystemEventFacade for GLFWBackend {
                 );
             }
             if !*window.fullscreen_requested.borrow() && fullscreen {
-                let vidmode = self.primary_monitor.get_video_mode().unwrap();
+                window.is_fullscreen = false;
                 self.window.set_monitor(
                     glfw::WindowMode::Windowed,
                     window.pos().0 as i32,
                     window.pos().1 as i32,
-                    vidmode.width,
-                    vidmode.height,
+                    window.width() as u32,
+                    window.height() as u32,
                     None,
                 );
             }

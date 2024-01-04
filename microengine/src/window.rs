@@ -48,7 +48,8 @@ pub struct Window {
     posx: isize,
     posy: isize,
     aspect_ratio: f64,
-    is_fullscreen: bool,
+    // TODO: Clean merge is_fullscreen and fullscreen_requested into single value
+    pub(crate) is_fullscreen: bool,
     pub(crate) fullscreen_requested: RefCell<bool>,
     pub(crate) close_requested: RefCell<bool>,
     should_close: bool,

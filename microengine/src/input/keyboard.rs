@@ -3,7 +3,8 @@
 pub mod keys;
 use std::iter;
 
-use keys::{KeyCode, KeyState, NUM_KEYS};
+use super::KeyState;
+use keys::{KeyCode, NUM_KEYS};
 
 pub struct KeyBoard {
     keys: Vec<KeyState>,
@@ -19,7 +20,7 @@ impl KeyBoard {
         }
     }
 
-    /// Change key state to KeyState::Down
+    /// Change key state to KeyState::Down if not pressed already
     /// Managed by SystemEventFacade implementation
     pub(crate) fn press_key(&mut self, key: KeyCode) {
         self.keys[key as usize] = match self.keys[key as usize] {

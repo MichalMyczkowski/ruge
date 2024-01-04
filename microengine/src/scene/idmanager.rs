@@ -1,7 +1,10 @@
 //! Module providing struct used by Scene to manage gameobject IDs
 //! It is scene's job to ensure that all dropped gameobjects free their ID
 
-use crate::{gameobject::GameObjectId, error::{GameError, GameResult}};
+use crate::{
+    error::{GameError, GameResult},
+    gameobject::GameObjectId,
+};
 use std::iter;
 
 pub(crate) struct IdManager {
@@ -27,7 +30,11 @@ impl IdManager {
         match self.id_pool.pop() {
             Some(t) => {
                 self.taken += 1;
-                Ok(GameObjectId { layer, idx: 0, id: t })
+                Ok(GameObjectId {
+                    layer,
+                    idx: 0,
+                    id: t,
+                })
             }
             None => Err(GameError::GameLogicError("run out of GameObjectIds".into())),
         }
@@ -69,7 +76,11 @@ mod tests {
     fn freeing_more_ids_panics() {
         let max_ids = 20;
         let mut im = IdManager::new(max_ids);
-        im.free(GameObjectId { layer: 0, idx: 0, id: 0 });
+        im.free(GameObjectId {
+            layer: 0,
+            idx: 0,
+            id: 0,
+        });
     }
 
     #[test]

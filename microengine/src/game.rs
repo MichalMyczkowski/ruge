@@ -39,28 +39,24 @@ impl Game {
             )?;
             if let Some(ref name) = self.next_scene_name.take() {
                 if !self.scenes.contains_key(name) {
-                    return Err(GameError::GameLogicError(format!("There is no scene named: {name}")));
+                    return Err(GameError::GameLogicError(format!(
+                        "There is no scene named: {name}"
+                    )));
                 }
-                let prev_scene = active_scene.replace(
-                    self.scenes.remove(name).unwrap()
-                );
+                let prev_scene = active_scene.replace(self.scenes.remove(name).unwrap());
                 if let Some(s) = prev_scene {
                     if !s.disposable {
                         let s = self.scenes.insert(s.name.clone(), s);
                         if let Some(s) = s {
-                            return Err(
-                                GameError::GameLogicError(
-                                    format!(
-                                        "Can't add more than one scene with name: {}",
-                                        s.name
-                                    )
-                                )
-                            )
+                            return Err(GameError::GameLogicError(format!(
+                                "Can't add more than one scene with name: {}",
+                                s.name
+                            )));
                         }
                     }
                 }
             }
-            
+
             // RUN SCENE
             // UPDATE SCENES (add dynamically created scenes)
             match active_scene {
@@ -69,14 +65,14 @@ impl Game {
                     // TODO!
                     // GET ALL DYNAMICALLY CREATED SCENES FROM SCENE!
                     // CHECK IF SCENE SHOULD CHANGE ( scene.should_change()-> Option<String> )
-                },
+                }
                 None => {
-                    return Err(
-                        GameError::GameLogicError("Trying to run game without setting starting scene first!".into())
-                    );
+                    return Err(GameError::GameLogicError(
+                        "Trying to run game without setting starting scene first!".into(),
+                    ));
                 }
             }
-
+            self.ctx.input.update_state();
             self.ev_handler.loop_end(
                 &mut self.ctx.window,
                 &mut self.ctx.input,
@@ -85,22 +81,16 @@ impl Game {
         }
         Ok(())
     }
-    
+
     /// Adds given scene to the game.
     /// Use this method to compose your game!
     pub fn add_scene(&mut self, scene: Scene) -> GameResult {
         let s = self.scenes.insert(scene.name.clone(), scene);
         match s {
-            Some(s) => {
-                Err(
-                    GameError::GameLogicError(
-                        format!(
-                            "Can't add more than one scene with name: {}",
-                            s.name
-                        )
-                    )
-                )
-            },
+            Some(s) => Err(GameError::GameLogicError(format!(
+                "Can't add more than one scene with name: {}",
+                s.name
+            ))),
             None => Ok(()),
         }
     }
@@ -108,7 +98,6 @@ impl Game {
     pub fn set_starting_scene_name(&mut self, scene_name: &str) {
         self.next_scene_name = Some(scene_name.into());
     }
-
 }
 
 /// For now it's the only way to create a Game
