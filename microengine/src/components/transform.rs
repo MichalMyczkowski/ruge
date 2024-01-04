@@ -88,7 +88,7 @@ impl Default for Transform {
     fn default() -> Self {
         Transform {
             position: glm::Vec3::new(0.0, 0.0, 0.0),
-            rotation: glm::quat_identity(),
+            rotation: glm::quat_angle_axis(std::f32::consts::PI * 2.0, &glm::Vec3::z()),
             scale: glm::Vec3::new(1.0, 1.0, 1.0),
             local_to_world: glm::Mat4::default(),
             changed: true,

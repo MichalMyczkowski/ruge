@@ -83,9 +83,7 @@ impl Scene {
         // so there's no unnecessary mutable reference to scene
         for layer in 0..self.layers {
             for it in 0..self.gameobject_ids[layer].len() {
-                //if self.gameobject_ids[layer].len() == 0 { continue; }
                 let id = self.gameobject_ids[layer][it];
-                // let go = self.gameobjects[layer].get_mut(&id).unwrap().take();
                 let go = self.gameobjects[layer].remove(&id.id).unwrap();
                 let mut go = match go {
                     Some(g) => g,
