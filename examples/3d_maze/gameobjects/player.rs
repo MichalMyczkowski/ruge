@@ -1,7 +1,13 @@
 mod cameras;
+mod mesh;
+
+use mesh::PlayerMesh;
 
 use cameras::{
     FirstPersonCam,
+    SideViewCam,
+    ThirdPersonCam,
+    CameraType,
     CameraObject,
 };
 use microengine::{
@@ -9,11 +15,11 @@ use microengine::{
     components::{camera::Camera, transform::Transform}, KeyCode,
 };
 
-use self::cameras::{SideViewCam, CameraType};
 
 
 pub struct Player {
     transform: Transform,
+    mesh: PlayerMesh,
     cameras: Vec<Box<dyn CameraObject>>,
     camera_index: usize,
 }
@@ -22,6 +28,7 @@ impl Player {
     pub fn new() -> Self {
         Self {
             transform: Transform::default(),
+            mesh: PlayerMesh::new(),
             cameras: Vec::with_capacity(3),
             camera_index: 0,
         }
@@ -54,6 +61,15 @@ impl GameObject for Player {
                 SideViewCam::new(
                     ctx.window.width() as f32,
                     ctx.window.height() as f32,
+                )
+            ),
+        );
+        self.cameras.push(
+            Box::new(
+                ThirdPersonCam::new(
+                    ctx.window.width() as f32, 
+                    ctx.window.height() as f32, 
+                    0.1,
                 )
             ),
         );
@@ -98,11 +114,23 @@ impl GameObject for Player {
                 }
                 cam.transform.position = self.transform.position;
             },
+            CameraType::ThirdPerson => {
+                cam.transform.position = self.transform.position + glm::Vec3::new(0.0, 0.0, 3.0);
+            }
         }
 
 
         
         Ok(())
+    }
+
+    fn draw(&mut self, ctx: &microengine::context::Context, _scene: &microengine::Scene) -> microengine::error::GameResult {
+        self.mesh.draw(
+            self.transform.local_to_world(),
+            self.active_camera().world_to_projection_matrix(),
+            ctx.time.get_timestamp() as f32
+        );
+        Ok(()) 
     }
     
     fn as_any(&self) -> &dyn std::any::Any {

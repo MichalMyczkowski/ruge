@@ -11,13 +11,15 @@ use std::f32::consts::PI;
 pub enum CameraType {
     FirstPerson,
     SideView,
+    ThirdPerson,
 }
 
 impl From<usize> for CameraType {
     fn from(value: usize) -> Self {
         match value {
             0 => CameraType::FirstPerson,
-            _ => CameraType::SideView,
+            1 => CameraType::SideView,
+            _ => CameraType::ThirdPerson,
         }
     }
 }
@@ -131,3 +133,48 @@ impl CameraObject for SideViewCam {
     }
 }
 
+// -- -- -- -- --
+
+pub struct ThirdPersonCam {
+    camera: Camera,
+    sensitivity: f32,
+}
+
+impl ThirdPersonCam {
+    pub fn new(width: f32, height: f32, sensitivity: f32) -> Self {
+        Self {
+            camera: Camera::new(
+                        ProjectionType::Perspective { fov: 45.0 },
+                        0.01,
+                        1000.0, 
+                        width, 
+                        height
+                    ),
+            sensitivity,
+        }
+    }
+}
+
+impl GameObject for ThirdPersonCam {
+    fn update(&mut self, ctx: &microengine::context::Context, _scene: &microengine::Scene) -> microengine::error::GameResult {
+        self.camera.update_projection(ctx.window.width() as f32, ctx.window.height() as f32);
+        let offset_x = ctx.input.mouse.position_delta.0 * -1.0;
+        let offset_y = ctx.input.mouse.position_delta.1 * -1.0;
+        self.camera.transform.rotate(glm::Vec3::y(), offset_x * self.sensitivity * ctx.time.delta_time() as f32, Space::Local);
+        self.camera.transform.rotate(glm::Vec3::x(), offset_y * self.sensitivity * ctx.time.delta_time() as f32, Space::Local);
+        Ok(()) 
+    }
+    
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+}
+
+impl CameraObject for ThirdPersonCam {
+    fn get_camera(&self) -> &Camera {
+        &self.camera
+    }
+    fn get_camera_mut(&mut self) -> &mut Camera {
+        &mut self.camera
+    }
+}
