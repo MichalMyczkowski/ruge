@@ -775,7 +775,6 @@ impl SystemEventFacade for GLFWBackend {
                 && !window.is_fullscreen
             {
                 window.system_update_resolution(w as usize, h as usize);
-                window.system_update_resolution(260, 120);
                 unsafe {
                     gl::Viewport(0, 0, w, h);
                 }
