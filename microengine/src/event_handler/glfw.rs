@@ -865,6 +865,9 @@ impl SystemEventFacade for GLFWBackend {
                     vidmode.height,
                     None,
                 );
+                unsafe {
+                    gl::Viewport(0, 0, vidmode.width as i32, vidmode.height as i32);
+                }
             }
             if !*window.fullscreen_requested.borrow() && fullscreen {
                 window.is_fullscreen = false;
