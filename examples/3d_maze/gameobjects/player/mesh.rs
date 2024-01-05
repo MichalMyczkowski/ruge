@@ -146,7 +146,7 @@ impl PlayerMesh {
         }
     }
 
-    pub fn draw(&self, model: glm::Mat4, projection: glm::Mat4, time: f32) {
+    pub fn draw(&self, mvp: glm::Mat4, time: f32) {
         self.program.bind_program();
         self.program.bind_vao();
         self.texture.bind_texture();
@@ -160,16 +160,10 @@ impl PlayerMesh {
                 self.radius,
             );
             gl::UniformMatrix4fv( 
-                self.program.get_uniform_location("model"),
+                self.program.get_uniform_location("mvp"),
                 1,
                 gl::FALSE, 
-                model.iter().map(|&x| x).collect::<Vec<f32>>().as_ptr() as *const f32
-            );
-            gl::UniformMatrix4fv( 
-                self.program.get_uniform_location("projection"),
-                1,
-                gl::FALSE, 
-                projection.iter().map(|&x| x).collect::<Vec<f32>>().as_ptr() as *const f32
+                mvp.iter().map(|&x| x).collect::<Vec<f32>>().as_ptr() as *const f32
             );
             gl::DrawElements(
                 gl::TRIANGLES,
