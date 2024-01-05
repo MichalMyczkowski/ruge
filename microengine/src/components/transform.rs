@@ -9,9 +9,9 @@ pub enum Space {
 
 #[derive(Debug, Clone)]
 pub struct Transform {
-    pub position: glm::Vec3,
+    position: glm::Vec3,
     pub rotation: glm::Quat,
-    pub scale: glm::Vec3,
+    scale: glm::Vec3,
     local_to_world: glm::Mat4,
     changed: bool,
 }
@@ -23,6 +23,39 @@ impl Transform {
         t.rotate_euler(rotation, Space::World);
         t.scale = scale;
         t
+    }
+
+    /// Returns a reference to position vector.
+    pub fn position(&self) -> &glm::Vec3 {
+        &self.position
+    }
+
+    /// Returns a mutable reference to position vector.
+    pub fn position_mut(&mut self) -> &mut glm::Vec3 {
+        self.changed = true;
+        &mut self.position
+    }
+
+    /// Returns a reference to scale vector.
+    pub fn scale(&self) -> &glm::Vec3 {
+        &self.scale
+    }
+
+    /// Returns a mutable reference to scale vector.
+    pub fn scale_mut(&mut self) -> &mut glm::Vec3 {
+        self.changed = true;
+        &mut self.scale
+    }
+    
+    /// Returns a reference to rotation quaternion.
+    pub fn rotation(&self) -> &glm::Quat {
+        &self.rotation
+    }
+
+    /// Returns a mutable reference to rotation quaternion.
+    pub fn rotation_mut(&mut self) -> &mut glm::Quat {
+        self.changed = true;
+        &mut self.rotation
     }
 
     /// Returns local to world transformation matrix
@@ -65,6 +98,7 @@ impl Transform {
             }
         }
         self.rotation = self.rotation.normalize();
+        self.changed = true;
     }
 
     // /// Transforms a vector from world space to local space
