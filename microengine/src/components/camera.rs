@@ -35,7 +35,7 @@ impl Camera {
         let inverse_angle = glm::quat_angle(&self.transform.rotation) * -1.0;
         let inverse_rotation =
             glm::quat_angle_axis(inverse_angle, &glm::quat_axis(&self.transform.rotation));
-        let view = glm::translation(&(self.transform.position * -1.0));
+        let view = glm::translation(&(self.transform.position() * -1.0));
         let view = glm::quat_to_mat4(&inverse_rotation) * view;
         let projection = self.projection.projection_matrix();
         projection * view
