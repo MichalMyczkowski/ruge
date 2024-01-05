@@ -11,8 +11,8 @@ pub fn compose(mut game: Game) -> Game {
 fn main_scene() -> Scene {
     let mut main_scene = Scene::new(MAIN_SCENE, 3, 10000, true);
     let player_id = add_player(&mut main_scene); 
-    add_axis(&mut main_scene, player_id);
     add_maze(&mut main_scene, player_id);
+    add_axis(&mut main_scene, player_id);
     main_scene
 }
 
@@ -31,5 +31,5 @@ fn add_axis(scene: &mut Scene, player_id: GameObjectId) {
 fn add_maze(scene: &mut Scene, player_id: GameObjectId) {
     let mut m = Maze::new(13, "asdsadsa".into());
     m.set_player_id(player_id);
-    _ = scene.add_gameobject(m, 1);
+    _ = scene.add_gameobject(m, 1).unwrap();
 }

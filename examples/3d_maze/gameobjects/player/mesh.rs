@@ -103,8 +103,7 @@ pub struct PlayerMesh{
 
 impl PlayerMesh {
 
-    pub fn new() -> Self {
-        let radius = 0.3;
+    pub fn new(radius: f32) -> Self {
         let sphere = Sphere::new(radius, 23, 17);
         let t = Self {
             program: CompiledProgram::new(VERT_SHADER_PATH, FRAG_SHADER_PATH),

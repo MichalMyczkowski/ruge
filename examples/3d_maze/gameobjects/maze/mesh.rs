@@ -15,32 +15,50 @@ pub struct MazeMesh{
 }
 
 impl MazeMesh {
+    
+    fn tetrahedron_verts(height: f32) -> Vec<glm::Vec3> {
+        let height_y = (2f32 / 3f32) * height * 2f32.sqrt();
+        vec![
+            glm::Vec3::new(-height / 3.0 * (3f32).sqrt(), height_y / -3f32, height / 3f32),
+            glm::Vec3::new(0.0, height_y / -3f32, -2f32 * height / 3f32),
+            glm::Vec3::new(height / 3.0 * (3f32).sqrt(), height_y / -3f32, height / 3f32),
+            glm::Vec3::new(0.0, height_y * 2f32/3f32, 0.0),
+        ]
+    }
+
+    pub fn tetrahedron_triangles(height: f32) -> Vec<Vec<glm::Vec3>> {
+        let v = Self::tetrahedron_verts(height);
+        vec![
+            vec![v[2], v[1], v[0]],
+            vec![v[1], v[3], v[0]],
+            vec![v[2], v[3], v[1]],
+            vec![v[0], v[3], v[2]],
+        ]
+    }
+
     fn calculate_verts_and_indices(height: f32) -> (Vec<f32>, Vec<u32>) {
         let mut aux = 0u32;
-        let H = (2f32 / 3f32) * height * 2f32.sqrt();
-        let v_x = vec![-height / 3.0 * (3f32).sqrt(), 0.0, height / 3.0 * (3f32).sqrt(), 0.0];
-        let v_z = vec![height / 3f32, -2f32 * height / 3f32, height / 3f32, 0.0];
-        let v_y = vec![H / -3f32, H / -3f32, H / -3f32, H * 2f32/3f32];
+        let v = Self::tetrahedron_verts(height);
         // layout:
         // position | texture coordinate
         (
             vec![
                 // first tri
-                v_x[2], v_y[2], v_z[2], /**/ 0.0, 1.0,
-                v_x[1], v_y[1], v_z[1], /**/ 0.5, 0.0,
-                v_x[0], v_y[0], v_z[0], /**/ 1.0, 1.0,
+                v[2].x, v[2].y, v[2].z, /**/ 0.0, 1.0,
+                v[1].x, v[1].y, v[1].z, /**/ 0.5, 0.0,
+                v[0].x, v[0].y, v[0].z, /**/ 1.0, 1.0,
                 // second tri
-                v_x[1], v_y[1], v_z[1], /**/ 0.0, 1.0,
-                v_x[3], v_y[3], v_z[3], /**/ 0.5, 0.0,
-                v_x[0], v_y[0], v_z[0], /**/ 1.0, 1.0,
+                v[1].x, v[1].y, v[1].z, /**/ 0.0, 1.0,
+                v[3].x, v[3].y, v[3].z, /**/ 0.5, 0.0,
+                v[0].x, v[0].y, v[0].z, /**/ 1.0, 1.0,
                 // third tri
-                v_x[2], v_y[2], v_z[2], /**/ 0.0, 1.0,
-                v_x[3], v_y[3], v_z[3], /**/ 0.5, 0.0,
-                v_x[1], v_y[1], v_z[1], /**/ 1.0, 1.0,
+                v[2].x, v[2].y, v[2].z, /**/ 0.0, 1.0,
+                v[3].x, v[3].y, v[3].z, /**/ 0.5, 0.0,
+                v[1].x, v[1].y, v[1].z, /**/ 1.0, 1.0,
                 // fourth tri
-                v_x[0], v_y[0], v_z[0], /**/ 0.0, 1.0,
-                v_x[3], v_y[3], v_z[3], /**/ 0.5, 0.0,
-                v_x[2], v_y[2], v_z[2], /**/ 1.0, 1.0,
+                v[0].x, v[0].y, v[0].z, /**/ 0.0, 1.0,
+                v[3].x, v[3].y, v[3].z, /**/ 0.5, 0.0,
+                v[2].x, v[2].y, v[2].z, /**/ 1.0, 1.0,
             ],
             iter::repeat_with(|| {
                 let v = vec![0, 1, 2];

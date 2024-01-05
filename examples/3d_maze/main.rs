@@ -1,6 +1,7 @@
 mod compose;
 mod config;
 mod gameobjects;
+mod utils;
 
 extern crate gl;
 extern crate nalgebra_glm as glm;
