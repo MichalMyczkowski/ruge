@@ -58,16 +58,18 @@ impl Transform {
         &mut self.rotation
     }
 
+    pub fn calculate_local_to_world_matrix(&self) -> glm::Mat4 {
+        let wrld = glm::translation(&self.position);
+        let wrld = glm::scale(&wrld, &self.scale);
+        let wrld = wrld * glm::quat_to_mat4(&self.rotation);
+        wrld
+    }
+    
+    // TODO! should return reference!
     /// Returns local to world transformation matrix
     pub fn local_to_world(&mut self) -> glm::Mat4 {
         if self.changed {
-            let wrld = glm::translation(&self.position);
-            let wrld = glm::scale(&wrld, &self.scale);
-            self.local_to_world = wrld * glm::quat_to_mat4(&self.rotation);
-
-            //let wrld = glm::scaling(&self.scale);
-            //let wrld = wrld * glm::quat_to_mat4(&self.rotation);
-            //self.local_to_world = glm::translate(&wrld, &self.position);
+            self.local_to_world = self.calculate_local_to_world_matrix();
             self.changed = false;
         }
         self.local_to_world
