@@ -1,99 +1,11 @@
 use std::iter;
-use gl_utils::{CompiledProgram, Texture};
+use gl_utils::{CompiledProgram, Texture, primitives};
 use crate::config::debug;
 
 
 const VERT_SHADER_PATH: &str = "./examples/3d_maze/gameobjects/player/shaders/player.vs";
 const FRAG_SHADER_PATH: &str = "./examples/3d_maze/gameobjects/player/shaders/player.fs";
 const TEXTURE_PATH: &str = "./examples/3d_maze/assets/gradient.png";
-
-// TODO! Move sphere code somewhere else
-struct Ring {
-    index: usize,
-    segments: usize,
-    points: Vec<glm::Vec3>,
-}
-
-impl Ring {
-    pub fn new(radius: f32, rings: usize, segments: usize, idx: usize) -> Self {
-        if idx == 0 || idx == rings + 1 {
-            let radius = if idx == 0 { -1.0 * radius } else { radius };
-            return Self {
-                index: idx,
-                segments,
-                points: vec![glm::Vec3::new(0.0, radius, 0.0)],
-            }
-        }
-        let y_spacing = (2.0 * radius) / (rings + 1) as f32;
-        let y = (y_spacing * idx as f32) - radius;
-        let radius = f32::sqrt(radius.powi(2) - y.powi(2));
-        let mut value = 0.0f32;
-        let step = std::f32::consts::PI * 2.0 / segments as f32;
-        let points = iter::repeat_with(|| {
-            let v = glm::Vec3::new(value.cos() * radius, y, value.sin() * radius);
-            value += step;
-            v
-        }).take(segments).collect();
-
-        Self {
-            index: idx,
-            segments,
-            points,
-        }
-    }
-
-    pub fn get_vert_idx(&self, idx: usize) -> usize {
-        if self.index == 0 {
-            0
-        } else {
-            let idx = idx % self.points.len();
-            idx + (self.index - 1) * self.segments + 1
-        }
-    }
-}
-
-pub struct Sphere {
-    verts: Vec<glm::Vec3>,
-    indices: Vec<u32>,
-}
-
-impl Sphere {
-    pub fn new(radius: f32, mut segments: usize, mut rings: usize) -> Self {
-        if segments < 3 {
-            segments = 3;
-        }
-        if rings == 0 {
-            rings = 1;
-        }
-
-        let mut indices: Vec<u32> = Vec::with_capacity(3 * rings * segments * 2);
-        let mut idx = 0usize;
-        let rings: Vec<Ring> = iter::repeat_with(|| {
-            let r = Ring::new(radius, rings, segments, idx);
-            idx += 1;
-            r
-        }).take(rings + 2).collect();
-
-        // each point on each ring creates two triangles
-        for r_idx in 1..rings.len()-1 {
-            for seg_idx in 0..segments {
-                // first triangle
-                indices.push(rings[r_idx].get_vert_idx(seg_idx) as u32);
-                indices.push(rings[r_idx].get_vert_idx(seg_idx + 1) as u32);
-                indices.push(rings[r_idx - 1].get_vert_idx(seg_idx + 1) as u32);
-                // second triangle
-                indices.push(rings[r_idx].get_vert_idx(seg_idx) as u32);
-                indices.push(rings[r_idx + 1].get_vert_idx(seg_idx) as u32);
-                indices.push(rings[r_idx].get_vert_idx(seg_idx + 1) as u32);
-            }
-        }
-
-        Sphere {
-            verts: rings.into_iter().flat_map(|r| r.points).collect(),
-            indices,
-        }
-    }
-}
 
 pub struct PlayerMesh{
     program: CompiledProgram,
@@ -105,7 +17,7 @@ pub struct PlayerMesh{
 impl PlayerMesh {
 
     pub fn new(radius: f32) -> Self {
-        let sphere = Sphere::new(radius, 23, 17);
+        let sphere = primitives::Sphere::new(radius, 23, 17);
         let t = Self {
             program: CompiledProgram::new(VERT_SHADER_PATH, FRAG_SHADER_PATH),
             texture: Texture::from(TEXTURE_PATH),
@@ -116,7 +28,7 @@ impl PlayerMesh {
         t
     }
 
-    fn set_buffers(&self, sphere: Sphere) {
+    fn set_buffers(&self, sphere: primitives::Sphere) {
 
         self.program.bind_buffers();
         unsafe {
