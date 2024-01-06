@@ -26,6 +26,7 @@ pub struct Player {
     radius: f32,
     cameras: Vec<Box<dyn CameraObject>>,
     camera_index: usize,
+    reached_goal: bool,
     // circular reference 
     maze_id: Option<GameObjectId>,
     // moving
@@ -46,6 +47,7 @@ impl Player {
             camera_index: 0,
             maze_id: None,
             speed: glm::Vec3::zeros(),
+            reached_goal: false,
             acceleration: 0.1,
             friction: 0.95,
             max_speed: 3.0,
@@ -54,6 +56,10 @@ impl Player {
 
     pub fn active_camera(&self) -> &Camera {
         self.cameras[self.camera_index].get_camera()
+    }
+
+    pub fn reached_goal(&self) -> bool {
+        self.reached_goal
     }
 
     fn next_camera(&mut self) {
@@ -138,7 +144,16 @@ impl GameObject for Player {
             let maze = scene.gameobject_by_id::<Maze>(self.maze_id.as_ref().unwrap());
             match maze {
                 Some(maze) => {
+
                     let new_t = self.transform.position() + self.speed;
+                    // check if reached the goal
+                    let end_pos = maze.size() as f32 - 1.0;
+                    let end_pos = glm::Vec3::new(end_pos, end_pos, end_pos);
+                    let dist = glm::distance(&new_t, &end_pos);
+                    if dist <= self.radius + 0.2 {
+                        self.reached_goal = true;
+                    }
+                    // check collisions
                     let dist = maze.distance_to_obstacle(&new_t);
                     if let Some(dist) = dist {
                         // collision detected

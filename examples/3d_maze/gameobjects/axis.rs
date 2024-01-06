@@ -19,6 +19,7 @@ pub struct Axis {
     transform: Transform,
     mesh: AxisMesh,
     player_id: Option<GameObjectId>,
+    start_time: f64,
 }
 
 impl Axis {
@@ -27,19 +28,26 @@ impl Axis {
             transform: Transform::default(),
             mesh: AxisMesh::new(),
             player_id: None,
+            start_time: 0.0,
         }
     }
 
 }
 
 impl GameObject for Axis {
-    fn start(&mut self, _ctx: &Context, scene: &Scene) -> GameResult {
+    fn start(&mut self, ctx: &Context, scene: &Scene) -> GameResult {
+        self.start_time = ctx.time.get_timestamp();
         let player_id = scene.get_gameobject_id("player").unwrap();
         self.player_id = Some(player_id);
         Ok(())
     }
     
-    fn update(&mut self, ctx: &Context, _scene: &Scene) -> GameResult {
+    fn update(&mut self, ctx: &Context, scene: &Scene) -> GameResult {
+        let player = scene.gameobject_by_id::<Player>(self.player_id.as_ref().unwrap()).unwrap();
+        if player.reached_goal() {
+            println!("Reached end in: {}s", ctx.time.get_timestamp() - self.start_time);
+            ctx.window.close();
+        }
         if ctx.input.kb.get_key_down(KeyCode::KeyEscape) {
             ctx.window.close();
         }
