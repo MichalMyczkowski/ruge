@@ -12,9 +12,16 @@ pub struct GameObjectId {
 }
 
 pub trait GameObject {
-    /// start is executed when gameobejct is added to scene
+
+    /// on_add is executed when gameobejct is added to scene
     /// its id is given as one of the arguments, so it can be used later.
-    fn start(&mut self, _ctx: &Context, _scene: &Scene, _id: GameObjectId) -> GameResult {
+    fn on_add(&mut self, _ctx: &Context, _scene: &Scene, _id: GameObjectId) -> GameResult {
+        Ok(())
+    }
+
+    /// start is executed only once when the scene is first started.
+    /// Only gameobjects added before running the scene will execute this method.
+    fn start(&mut self, _ctx: &Context, _scene: &Scene) -> GameResult {
         Ok(())
     }
 

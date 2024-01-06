@@ -20,6 +20,7 @@ pub struct Scene {
     pub(crate) disposable: bool,
     pub(crate) layers: usize,
 
+    first_loop: bool,
     gameobjects: Vec<HashMap<usize, Option<Box<dyn GameObject>>>>,
     gameobject_ids: Vec<Vec<GameObjectId>>,
     new_gameobjects: RefCell<Vec<(GameObjectId, Box<dyn GameObject>)>>,
@@ -32,7 +33,7 @@ impl Scene {
         Scene {
             name: String::from(name),
             layers,
-            id_manager: RefCell::new(IdManager::new(max_gameobject_count)),
+            first_loop: true, id_manager: RefCell::new(IdManager::new(max_gameobject_count)),
             gameobjects: iter::repeat_with(|| HashMap::new()).take(layers).collect(),
             gameobject_ids: iter::repeat_with(|| Vec::new()).take(layers).collect(),
             new_gameobjects: RefCell::new(Vec::new()),
@@ -135,9 +136,14 @@ impl Scene {
                 );
             }
             id.idx = self.gameobject_ids[id.layer].len();
-            go.start(&ctx, &self, id)?;
+            go.on_add(&ctx, &self, id)?;
             self.gameobject_ids[id.layer].push(id);
             self.gameobjects[id.layer].insert(id.id, Some(go));
+        }
+        // run start
+        if self.first_loop {
+            self.first_loop = false;
+            self.for_all_gameobjects(|_, go, scene| go.start(&ctx, scene))?;
         }
 
         // run fixed_update
