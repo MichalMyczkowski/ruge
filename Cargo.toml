@@ -20,11 +20,11 @@ gl_utils = { path="./gl_utils" }
 name = "task_03"
 path = "examples/task_03/main.rs"
 [[example]]
-name = "3Dcamera"
-path = "examples/camera_movement/main.rs"
-[[example]]
 name = "3d_maze"
 path = "examples/3d_maze/main.rs"
+[[example]]
+name = "volcano"
+path = "examples/volcano/main.rs"
 
 [dev-dependencies]
 clap = { version = "4.4.10", features = ["derive"] }
