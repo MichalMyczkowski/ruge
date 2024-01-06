@@ -1,5 +1,5 @@
 use crate::{
-    config::MAIN_SCENE, gameobjects::{player::Player, axis::Axis},
+    config::MAIN_SCENE, gameobjects::{player::Player, axis::Axis, bubbles::Bubbles},
     config::VolcanoConfig,
 };
 use microengine::{Game, Scene};
@@ -13,6 +13,7 @@ fn create_scene(config: VolcanoConfig, name: &str) -> Scene {
     let mut main_scene = Scene::new(name, 3, 10000, true);
     add_player(&mut main_scene); 
     add_axis(&mut main_scene);
+    add_bubbles(&mut main_scene);
     main_scene
 }
 
@@ -20,6 +21,11 @@ fn create_scene(config: VolcanoConfig, name: &str) -> Scene {
 fn add_player(scene: &mut Scene) {
     let player = Player::new();
     _ = scene.add_gameobject(player, 1).unwrap()
+}
+
+fn add_bubbles(scene: &mut Scene) {
+    let bubbles = Bubbles::new(50, 10.0, "asdads");
+    _ = scene.add_gameobject(bubbles, 1).unwrap()
 }
 
 fn add_axis(scene: &mut Scene) {

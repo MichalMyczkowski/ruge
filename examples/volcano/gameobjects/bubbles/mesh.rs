@@ -1,19 +1,18 @@
 use gl_utils::{CompiledProgram, Texture, primitives};
-use crate::config::debug;
 
 
-const VERT_SHADER_PATH: &str = "./examples/3d_maze/gameobjects/player/shaders/player.vs";
-const FRAG_SHADER_PATH: &str = "./examples/3d_maze/gameobjects/player/shaders/player.fs";
+const VERT_SHADER_PATH: &str = "./examples/volcano/gameobjects/bubbles/shaders/bubbles.vs";
+const FRAG_SHADER_PATH: &str = "./examples/volcano/gameobjects/bubbles/shaders/bubbles.fs";
 const TEXTURE_PATH: &str = "./examples/3d_maze/assets/gradient.png";
 
-pub struct PlayerMesh{
+pub struct BubbleMesh{
     program: CompiledProgram,
     texture: Texture,
     radius: f32,
     indices: usize,
 }
 
-impl PlayerMesh {
+impl BubbleMesh {
 
     pub fn new(radius: f32) -> Self {
         let sphere = primitives::Sphere::new(radius, 23, 17);
@@ -54,17 +53,15 @@ impl PlayerMesh {
                 (3 * std::mem::size_of::<f32>()) as gl::types::GLint,
                 std::ptr::null(),
             );
+            gl::Enable(gl::CULL_FACE); 
         }
     }
 
-    pub fn draw(&self, mvp: glm::Mat4, time: f32) {
+    pub fn draw(&self, mvps: &Vec<f32>, colors: &Vec<f32>, time: f32, count: usize) {
         self.program.bind_program();
         self.program.bind_vao();
         self.texture.bind_texture();
         unsafe {
-            if debug() {
-                gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
-            }
             gl::Uniform1f(
                 self.program.get_uniform_location("time"),
                 time,
@@ -73,21 +70,24 @@ impl PlayerMesh {
                 self.program.get_uniform_location("radius"),
                 self.radius,
             );
-            gl::UniformMatrix4fv( 
-                self.program.get_uniform_location("mvp"),
-                1,
-                gl::FALSE, 
-                mvp.iter().map(|&x| x).collect::<Vec<f32>>().as_ptr() as *const f32
+            gl::Uniform1fv( 
+                self.program.get_uniform_location("colors"),
+                count as i32,
+                colors.as_ptr() as *const f32
             );
-            gl::DrawElements(
+            gl::UniformMatrix4fv( 
+                self.program.get_uniform_location("mvps"),
+                count as i32,
+                gl::FALSE, 
+                mvps.as_ptr() as *const f32
+            );
+            gl::DrawElementsInstanced(
                 gl::TRIANGLES,
                 self.indices as i32,
                 gl::UNSIGNED_INT, 
                 0 as *const gl::types::GLvoid,
+                count as i32,
             );
-            if debug() {
-                gl::PolygonMode(gl::FRONT_AND_BACK, gl::FILL);
-            }
         }
     }
 }
