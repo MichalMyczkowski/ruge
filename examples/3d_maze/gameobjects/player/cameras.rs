@@ -77,10 +77,11 @@ impl CameraObject for FirstPersonCam {
 pub struct SideViewCam {
     camera: Camera,
     speed: f32,
+    fixed_height: f32,
 }
 
 impl SideViewCam {
-    pub fn new(width: f32, height: f32) -> Self {
+    pub fn new(width: f32, height: f32, fixed_height: f32) -> Self {
         let mut camera = Camera::new(
             ProjectionType::Ortographic,
             0.01,
@@ -93,6 +94,7 @@ impl SideViewCam {
         Self {
             camera,
             speed: 2.0,
+            fixed_height,
         }
     }
 }
@@ -111,11 +113,9 @@ impl CameraObject for SideViewCam {
         &mut self.camera
     }
     fn update(&mut self, ctx: &Context, player_transform: &transform::Transform, is_active: bool) {
-        // TODO! FIX THIS SHIT XD
-        //self.camera.update_projection(ctx.window.width() as f32, ctx.window.height() as f32);
+        let width = (ctx.window.width() as f32 / ctx.window.height() as f32) * self.fixed_height;
+        self.camera.update_projection(width, self.fixed_height);
         if is_active {
-            self.camera.update_projection(4.0, 3.0);
-
             if ctx.input.kb.get_key(KeyCode::KeyLeft) || ctx.input.kb.get_key(KeyCode::KeyA) {
                 self.camera.transform.position_mut().z -= self.speed * ctx.time.delta_time() as f32;
             }
@@ -128,8 +128,10 @@ impl CameraObject for SideViewCam {
             if ctx.input.kb.get_key(KeyCode::KeyDown) || ctx.input.kb.get_key(KeyCode::KeyS) {
                 self.camera.transform.position_mut().y -= self.speed * ctx.time.delta_time() as f32;
             }
+        } else {
+            self.camera.transform.position_mut().z = player_transform.position().z - width / 2.0;
+            self.camera.transform.position_mut().y = player_transform.position().y - self.fixed_height / 2.0;
         }
-        // TODO: else set it's center on player position
     }
 }
 

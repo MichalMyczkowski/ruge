@@ -105,7 +105,9 @@ impl Player {
 
 impl GameObject for Player {
     fn start(&mut self, ctx: &microengine::context::Context, scene: &microengine::Scene) -> microengine::error::GameResult {
-        ctx.input.mouse.set_cursor_visibility(false);
+        if !debug() {
+            ctx.input.mouse.set_cursor_visibility(false);
+        }
         self.cameras.push(
             Box::new(
                 FirstPersonCam::new(
@@ -120,6 +122,7 @@ impl GameObject for Player {
                 SideViewCam::new(
                     ctx.window.width() as f32,
                     ctx.window.height() as f32,
+                    3.0,
                 )
             ),
         );
