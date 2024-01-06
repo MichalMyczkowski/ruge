@@ -20,6 +20,7 @@ pub struct Scene {
     pub(crate) disposable: bool,
     pub(crate) layers: usize,
 
+    first_loop: bool,
     gameobjects: Vec<HashMap<usize, Option<Box<dyn GameObject>>>>,
     gameobject_ids: Vec<Vec<GameObjectId>>,
     new_gameobjects: RefCell<Vec<(GameObjectId, Box<dyn GameObject>)>>,
@@ -32,7 +33,7 @@ impl Scene {
         Scene {
             name: String::from(name),
             layers,
-            id_manager: RefCell::new(IdManager::new(max_gameobject_count)),
+            first_loop: true, id_manager: RefCell::new(IdManager::new(max_gameobject_count)),
             gameobjects: iter::repeat_with(|| HashMap::new()).take(layers).collect(),
             gameobject_ids: iter::repeat_with(|| Vec::new()).take(layers).collect(),
             new_gameobjects: RefCell::new(Vec::new()),
@@ -49,6 +50,24 @@ impl Scene {
             match layer.get(&id.id) {
                 Some(Some(ref go)) => return Some((*go).as_any().downcast_ref::<T>().unwrap()),
                 _ => continue,
+            }
+        }
+        None
+    }
+
+    /// Returns id of the first gameobject with given name
+    /// This method checks each gameobject in scene so it is not recommended to use it
+    /// every frame. Instead id should be cached for later use.
+    pub fn get_gameobject_id(&self, name: &str) -> Option<GameObjectId> {
+        for layer in 0..self.layers {
+            for it in 0..self.gameobject_ids[layer].len() {
+                let id = self.gameobject_ids[layer][it];
+                let go = self.gameobjects[layer].get(&id.id);
+                if let Some(go) = go {
+                    if go.as_ref().unwrap().name() == name {
+                        return Some(id);
+                    }
+                }
             }
         }
         None
@@ -117,9 +136,14 @@ impl Scene {
                 );
             }
             id.idx = self.gameobject_ids[id.layer].len();
-            go.start(&ctx, &self, id)?;
+            go.on_add(&ctx, &self, id)?;
             self.gameobject_ids[id.layer].push(id);
             self.gameobjects[id.layer].insert(id.id, Some(go));
+        }
+        // run start
+        if self.first_loop {
+            self.first_loop = false;
+            self.for_all_gameobjects(|_, go, scene| go.start(&ctx, scene))?;
         }
 
         // run fixed_update
