@@ -15,6 +15,9 @@ pub struct GLFWBackend {
     events: glfw::GlfwReceiver<(f64, glfw::WindowEvent)>,
     glfw: glfw::Glfw,
     primary_monitor: glfw::Monitor,
+    // fullscreen management
+    windowed_width: usize,
+    windowed_height: usize,
 }
 
 impl GLFWBackend {
@@ -30,11 +33,10 @@ impl GLFWBackend {
         glfw.window_hint(glfw::WindowHint::OpenGlForwardCompat(true));
 
         let primary_monitor = Monitor::from_primary();
-        let mode = if window.is_fullscreen() {
-            WindowMode::FullScreen(&primary_monitor)
-        } else {
-            WindowMode::Windowed
-        };
+        let mode = WindowMode::Windowed;
+        if window.is_fullscreen() {
+            window.set_fullscreen(true);
+        }
 
         let result = glfw.create_window(
             window.width() as u32,
@@ -62,6 +64,8 @@ impl GLFWBackend {
                     events,
                     glfw,
                     primary_monitor,
+                    windowed_width: window.width(),
+                    windowed_height: window.height(),
                 }
             }
             None => panic!("Failed to create GLFW Window"),
@@ -848,7 +852,6 @@ impl SystemEventFacade for GLFWBackend {
         self.window.swap_buffers();
         {
             // fullscreen handling
-            // TODO! fullscreen could just be read from window.is_fullscreen()
             let mut fullscreen: bool = false;
             self.window.with_window_mode(|mode| match mode {
                 WindowMode::FullScreen(_) => fullscreen = true,
@@ -857,6 +860,9 @@ impl SystemEventFacade for GLFWBackend {
             if *window.fullscreen_requested.borrow() && !fullscreen {
                 let vidmode = self.primary_monitor.get_video_mode().unwrap();
                 window.is_fullscreen = true;
+                // save window size
+                self.windowed_width = window.width();
+                self.windowed_height = window.height();
                 self.window.set_monitor(
                     glfw::WindowMode::FullScreen(&self.primary_monitor),
                     0,
@@ -865,12 +871,14 @@ impl SystemEventFacade for GLFWBackend {
                     vidmode.height,
                     None,
                 );
+                window.system_update_resolution(vidmode.width as usize, vidmode.height as usize);
                 unsafe {
                     gl::Viewport(0, 0, vidmode.width as i32, vidmode.height as i32);
                 }
             }
             if !*window.fullscreen_requested.borrow() && fullscreen {
                 window.is_fullscreen = false;
+                window.system_update_resolution(self.windowed_width as usize, self.windowed_height as usize);
                 self.window.set_monitor(
                     glfw::WindowMode::Windowed,
                     window.pos().0 as i32,
@@ -879,6 +887,9 @@ impl SystemEventFacade for GLFWBackend {
                     window.height() as u32,
                     None,
                 );
+                unsafe {
+                    gl::Viewport(0, 0, window.width() as i32, window.height() as i32);
+                }
             }
         }
         if self.window.should_close() {
