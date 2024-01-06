@@ -6,11 +6,11 @@ layout(location = 3) in vec4 m_2;
 layout(location = 4) in vec4 m_3;
 layout(location = 5) in vec4 m_4;
 
-uniform int last_instance;
 uniform int size;
 uniform mat4 projection;
 uniform float time;
 
+out float instance_id;
 out vec2 texture_coord;
 out vec4 color;
 
@@ -152,6 +152,7 @@ void main(void) {
     // out values
     color = vec4(xx, zz, yy, 1.0) * value;
     texture_coord = tex_coord;
+    instance_id = float(gl_InstanceID);
 
     //if (gl_InstanceID == last_instance || gl_InstanceID == 0) {
     //    color.a = 0.0;

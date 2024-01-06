@@ -111,10 +111,13 @@ impl Maze {
                 true
             }
         }).filter_map(|(x, y, z)| {
-            if *x == 0 && *y == 0 && *z == 0 {
+            let (p_x, p_y, p_z) = (p_x + *x, p_y + *y, p_z + *z);
+            if p_x == 0 && p_y == 0 && p_z == 0 {
+                None
+            } else if p_x == self.size as isize - 1 && p_y == self.size as isize - 1 && p_z == self.size as isize - 1 {
                 None
             } else {
-                self.get_transform((*x + p_x) as usize, (*y + p_y) as usize, (*z + p_z) as usize)
+                self.get_transform((p_x) as usize, (p_y) as usize, (p_z) as usize)
             }
         }).collect();
        
