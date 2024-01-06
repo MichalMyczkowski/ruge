@@ -18,6 +18,7 @@ mod input;
 pub mod scene;
 mod timer;
 mod window;
+pub mod prelude;
 
 pub use event_handler::Backend;
 pub use game::{Game, GameConfig};
