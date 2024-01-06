@@ -54,6 +54,24 @@ impl Scene {
         None
     }
 
+    /// Returns id of the first gameobject with given name
+    /// This method checks each gameobject in scene so it is not recommended to use it
+    /// every frame. Instead id should be cached for later use.
+    pub fn get_gameobject_id(&self, name: &str) -> Option<GameObjectId> {
+        for layer in 0..self.layers {
+            for it in 0..self.gameobject_ids[layer].len() {
+                let id = self.gameobject_ids[layer][it];
+                let go = self.gameobjects[layer].get(&id.id);
+                if let Some(go) = go {
+                    if go.as_ref().unwrap().name() == name {
+                        return Some(id);
+                    }
+                }
+            }
+        }
+        None
+    }
+
     /// Adds given gameobject to scene and returns its Id.
     pub fn add_gameobject<T: GameObject + 'static>(
         &self,

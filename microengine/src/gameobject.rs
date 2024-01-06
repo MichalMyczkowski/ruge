@@ -14,7 +14,7 @@ pub struct GameObjectId {
 pub trait GameObject {
     /// start is executed when gameobejct is added to scene
     /// its id is given as one of the arguments, so it can be used later.
-    fn start(&mut self, _ctx: &Context, _scene: &Scene, id: GameObjectId) -> GameResult {
+    fn start(&mut self, _ctx: &Context, _scene: &Scene, _id: GameObjectId) -> GameResult {
         Ok(())
     }
 
@@ -38,6 +38,10 @@ pub trait GameObject {
     /// use it to draw to screen
     fn draw(&mut self, _ctx: &Context, _scene: &Scene) -> GameResult {
         Ok(())
+    }
+
+    fn name(&self) -> &str {
+        ""
     }
 
     /// as_any is needed to make searching for other gameobjects possible
