@@ -15,7 +15,7 @@ impl Background {
 }
 
 impl GameObject for Background {
-    fn start(&mut self, _ctx: &microengine::context::Context, _scene: &microengine::Scene, id: microengine::GameObjectId) -> microengine::error::GameResult {
+    fn start(&mut self, _ctx: &microengine::context::Context, _scene: &microengine::Scene) -> microengine::error::GameResult {
         unsafe {
         gl::Disable(gl::DEPTH_TEST);
         }

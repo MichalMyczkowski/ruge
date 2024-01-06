@@ -97,7 +97,7 @@ impl Player {
 }
 
 impl GameObject for Player {
-    fn start(&mut self, _ctx: &Context, _scene: &Scene, id: GameObjectId) -> GameResult {
+    fn on_add(&mut self, _ctx: &Context, _scene: &Scene, id: GameObjectId) -> GameResult {
         self.my_id = Some(id);
         Ok(())
     }

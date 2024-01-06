@@ -98,9 +98,6 @@ impl Maze {
             self.transform.get(idx)
         }
     }
-    pub fn set_player_id(&mut self, player_id: GameObjectId) {
-        self.player_id = Some(player_id);
-    }
 
     /// Returns minimal distance from given point to closest obstacle in maze.
     /// Checks only distance to obstacles that are in 'cells' around point.
@@ -146,9 +143,9 @@ impl Maze {
 }
 
 impl GameObject for Maze {
-    fn start(&mut self, _ctx: &Context, scene: &Scene, id: GameObjectId) -> GameResult {
-        let player = scene.gameobject_by_id::<Player>(self.player_id.as_ref().unwrap()).unwrap();
-        player.set_maze_id(id);
+    fn start(&mut self, _ctx: &Context, scene: &Scene) -> GameResult {
+        let player_id = scene.get_gameobject_id("player").unwrap();
+        self.player_id = Some(player_id);
         Ok(())
     }
     fn draw(&mut self, ctx: &Context, scene: &Scene) -> GameResult {
@@ -156,6 +153,9 @@ impl GameObject for Maze {
         let projection = player.active_camera().world_to_projection_matrix();
         self.mesh.draw(projection, ctx.time.get_timestamp() as f32);
         Ok(())
+    }
+    fn name(&self) -> &str {
+        "maze"
     }
 
     fn as_any(&self) -> &dyn std::any::Any {

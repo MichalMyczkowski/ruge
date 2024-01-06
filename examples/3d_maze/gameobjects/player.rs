@@ -1,8 +1,6 @@
 mod cameras;
 mod mesh;
 
-use std::cell::RefCell;
-
 use mesh::PlayerMesh;
 
 use cameras::{
@@ -28,7 +26,6 @@ pub struct Player {
     cameras: Vec<Box<dyn CameraObject>>,
     camera_index: usize,
     // circular reference 
-    maze_id_ref: RefCell<Option<GameObjectId>>,
     maze_id: Option<GameObjectId>,
     // moving
     speed: glm::Vec3,
@@ -46,17 +43,12 @@ impl Player {
             radius,
             cameras: Vec::with_capacity(3),
             camera_index: 0,
-            maze_id_ref: RefCell::new(None),
             maze_id: None,
             speed: glm::Vec3::zeros(),
             acceleration: 0.1,
             friction: 0.95,
             max_speed: 3.0,
         }
-    }
-
-    pub fn set_maze_id(&self, id: GameObjectId) {
-        *self.maze_id_ref.borrow_mut() = Some(id);
     }
 
     pub fn active_camera(&self) -> &Camera {
@@ -105,7 +97,7 @@ impl Player {
 }
 
 impl GameObject for Player {
-    fn start(&mut self, ctx: &microengine::context::Context, _scene: &microengine::Scene, _id: microengine::GameObjectId) -> microengine::error::GameResult {
+    fn start(&mut self, ctx: &microengine::context::Context, scene: &microengine::Scene) -> microengine::error::GameResult {
         ctx.input.mouse.set_cursor_visibility(false);
         self.cameras.push(
             Box::new(
@@ -135,6 +127,8 @@ impl GameObject for Player {
                 )
             ),
         );
+        let maze_id = scene.get_gameobject_id("maze").unwrap();
+        self.maze_id = Some(maze_id);
         Ok(())
     }
 
@@ -162,11 +156,6 @@ impl GameObject for Player {
     }
 
     fn update(&mut self, ctx: &microengine::context::Context, _scene: &microengine::Scene) -> microengine::error::GameResult {
-        // set maze_id
-        if self.maze_id.is_none() {
-            self.maze_id = *self.maze_id_ref.borrow();
-        }
-        
         if ctx.input.kb.get_key_down(KeyCode::KeyTab) {
             self.next_camera();
         }
@@ -199,6 +188,10 @@ impl GameObject for Player {
             );
             Ok(()) 
         }
+    }
+
+    fn name(&self) -> &str {
+        "player"
     }
     
     fn as_any(&self) -> &dyn std::any::Any {

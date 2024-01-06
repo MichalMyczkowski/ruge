@@ -51,7 +51,6 @@ impl GameObject for Finish {
         &mut self,
         ctx: &microengine::context::Context,
         _scene: &microengine::Scene,
-        _id: GameObjectId,
     ) -> microengine::error::GameResult {
         self.start_time = ctx.time.get_timestamp() as f32;
         Ok(())

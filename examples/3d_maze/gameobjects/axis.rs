@@ -29,13 +29,14 @@ impl Axis {
         }
     }
 
-    pub fn set_player_id(&mut self, player_id: GameObjectId) {
-        self.player_id = Some(player_id);
-    }
-
 }
 
 impl GameObject for Axis {
+    fn start(&mut self, _ctx: &Context, scene: &Scene) -> GameResult {
+        let player_id = scene.get_gameobject_id("player").unwrap();
+        self.player_id = Some(player_id);
+        Ok(())
+    }
     
     fn update(&mut self, ctx: &Context, _scene: &Scene) -> GameResult {
         if ctx.input.kb.get_key_down(KeyCode::KeyEscape) {
