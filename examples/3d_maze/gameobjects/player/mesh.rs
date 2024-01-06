@@ -1,5 +1,6 @@
 use std::iter;
 use gl_utils::{CompiledProgram, Texture};
+use crate::config::debug;
 
 
 const VERT_SHADER_PATH: &str = "./examples/3d_maze/gameobjects/player/shaders/player.vs";
@@ -150,6 +151,9 @@ impl PlayerMesh {
         self.program.bind_vao();
         self.texture.bind_texture();
         unsafe {
+            if debug() {
+                gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
+            }
             gl::Uniform1f(
                 self.program.get_uniform_location("time"),
                 time,
@@ -170,6 +174,9 @@ impl PlayerMesh {
                 gl::UNSIGNED_INT, 
                 0 as *const gl::types::GLvoid,
             );
+            if debug() {
+                gl::PolygonMode(gl::FRONT_AND_BACK, gl::FILL);
+            }
         }
     }
 }

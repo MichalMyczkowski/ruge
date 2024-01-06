@@ -2,6 +2,7 @@ mod cameras;
 mod mesh;
 
 use mesh::PlayerMesh;
+use crate::config::debug;
 
 use cameras::{
     FirstPersonCam,
@@ -133,24 +134,28 @@ impl GameObject for Player {
     }
 
     fn fixed_update(&mut self, _ctx: &microengine::context::Context, scene: &microengine::Scene) -> microengine::error::GameResult {
-        let maze = scene.gameobject_by_id::<Maze>(self.maze_id.as_ref().unwrap());
-        match maze {
-            Some(maze) => {
-                let new_t = self.transform.position() + self.speed;
-                let dist = maze.distance_to_obstacle(&new_t);
-                if let Some(dist) = dist {
-                    // collision detected
-                    if dist <= self.radius ||
-                        new_t.x < self.radius - 0.5 || new_t.x > maze.size() as f32 - self.radius - 0.5 ||
-                        new_t.y < self.radius - 0.5 || new_t.y > maze.size() as f32 - self.radius - 0.5 ||
-                        new_t.z < self.radius - 0.5 || new_t.z > maze.size() as f32 - self.radius - 0.5 {
-                        self.speed = glm::Vec3::zeros();
-                    } else {
-                        *self.transform.position_mut() = new_t;
+        if !debug() {
+            let maze = scene.gameobject_by_id::<Maze>(self.maze_id.as_ref().unwrap());
+            match maze {
+                Some(maze) => {
+                    let new_t = self.transform.position() + self.speed;
+                    let dist = maze.distance_to_obstacle(&new_t);
+                    if let Some(dist) = dist {
+                        // collision detected
+                        if dist <= self.radius ||
+                            new_t.x < self.radius - 0.5 || new_t.x > maze.size() as f32 - self.radius - 0.5 ||
+                            new_t.y < self.radius - 0.5 || new_t.y > maze.size() as f32 - self.radius - 0.5 ||
+                            new_t.z < self.radius - 0.5 || new_t.z > maze.size() as f32 - self.radius - 0.5 {
+                            self.speed = glm::Vec3::zeros();
+                        } else {
+                            *self.transform.position_mut() = new_t;
+                        }
                     }
-                }
-            },
-            None => ()
+                },
+                None => ()
+            }
+        } else {
+            *self.transform.position_mut() = self.transform.position() + self.speed;
         }
         Ok(())
     }

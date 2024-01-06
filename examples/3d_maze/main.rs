@@ -13,7 +13,7 @@ use std::process;
 
 
 fn main() {
-    let result = compose(Game::from(config::game_config())).run();
+    let result = compose(Game::from(config::game_config()), config::maze_config()).run();
     match result {
         Ok(_) => (),
         Err(e) => {
