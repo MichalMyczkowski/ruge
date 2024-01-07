@@ -41,7 +41,7 @@ impl Ring {
         let before = if self.index == 0  {
             0
         } else {
-            self.segments * (self.index - 1) + self.closed as usize
+            self.segments * (self.index - self.closed as usize) + self.closed as usize
         };
         let idx = idx % self.points.len();
         idx + before
@@ -54,49 +54,88 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    pub fn new(radius: f32, mut segments: usize, mut rings: usize) -> Self {
+    pub fn new(segments: usize, rings: usize) -> Self {
+        let s = SolidOfRevolution::new(2.0, segments, rings + 2, false, |x| (1.0f32 - x.powi(2)).sqrt());
+        Self {
+            verts: s.verts,
+            indices: s.indices,
+        }
+    }
+}
+
+
+pub struct SolidOfRevolution {
+    pub verts: Vec<glm::Vec3>,
+    pub indices: Vec<u32>,
+} 
+
+impl SolidOfRevolution {
+
+    // TODO: Return GameResult<Self> instead of 'fixing' errors
+    pub fn new<T>(height: f32, mut segments: usize, mut rings: usize, closed: bool, mut f: T) -> Self
+    where
+        T: FnMut(f32) -> f32,
+    {
         if segments < 3 {
             segments = 3;
         }
-        if rings == 0 {
-            rings = 1;
+        if rings < 2 {
+            rings = 2;
+        }
+        let indice_capacity;
+        let dividers = rings - 1;
+        if closed {
+            indice_capacity = 2 * 3 * rings * segments;
+        } else {
+            indice_capacity = 2 * 3 * (rings - 1) * segments;
         }
 
-        let mut indices: Vec<u32> = Vec::with_capacity(3 * rings * segments * 2);
-        let mut idx = 0usize;
-        let y_spacing = (2.0 * radius) / (rings + 1) as f32;
+        let mut indices: Vec<u32> = Vec::with_capacity(indice_capacity);
+        let mut ring_v: Vec<Ring> = Vec::with_capacity(rings + 2 * closed as usize);
 
-        let rings: Vec<Ring> = iter::repeat_with(|| {
-            let r;
-            if idx == 0 {
-                r = Ring::new_point_ring(glm::vec3(0.0, -radius, 0.0), segments, idx, true);
-            } else if idx == rings + 1 {
-                r = Ring::new_point_ring(glm::vec3(0.0, radius, 0.0), segments, idx, true);
-            } else {
-                let y = (y_spacing * idx as f32) - radius;
-                let radius = f32::sqrt(radius.powi(2) - y.powi(2));
-                r = Ring::new(radius, segments, y, idx, true);
-            }
+        let y_spacing = (height) / (dividers) as f32;
+        let mut y = -height / 2.0;
+        let mut idx = 0usize;
+
+        // Calculate verts
+        if closed {
+            ring_v.push(Ring::new_point_ring(glm::Vec3::new(0.0, y, 0.0), segments, idx, closed));
             idx += 1;
-            r
-        }).take(rings + 2).collect();
+        }
+        for _ in 0..rings {
+            // TODO! return error if radius = NAN or inf
+            let radius = f(y);
+            ring_v.push(Ring::new(radius, segments, y, idx, closed));
+            idx += 1;
+            y += y_spacing;
+        }
+        if closed {
+            y -= y_spacing;
+            ring_v.push(Ring::new_point_ring(glm::Vec3::new(0.0, y, 0.0), segments, idx, closed));
+        }
 
         // each point on each ring creates two triangles
-        for r_idx in 1..rings.len()-1 {
+        for r_idx in 0..ring_v.len() {
             for seg_idx in 0..segments {
+                if closed && r_idx == 0 { break; }
+                if closed && r_idx == ring_v.len() - 1 { break; }
                 // first triangle
-                indices.push(rings[r_idx].get_vert_idx(seg_idx) as u32);
-                indices.push(rings[r_idx].get_vert_idx(seg_idx + 1) as u32);
-                indices.push(rings[r_idx - 1].get_vert_idx(seg_idx + 1) as u32);
+                if r_idx != 0 {
+                    indices.push(ring_v[r_idx].get_vert_idx(seg_idx) as u32);
+                    indices.push(ring_v[r_idx].get_vert_idx(seg_idx + 1) as u32);
+                    indices.push(ring_v[r_idx - 1].get_vert_idx(seg_idx + 1) as u32);
+                }
                 // second triangle
-                indices.push(rings[r_idx].get_vert_idx(seg_idx) as u32);
-                indices.push(rings[r_idx + 1].get_vert_idx(seg_idx) as u32);
-                indices.push(rings[r_idx].get_vert_idx(seg_idx + 1) as u32);
+                if r_idx != ring_v.len() - 1 {
+                    indices.push(ring_v[r_idx].get_vert_idx(seg_idx) as u32);
+                    indices.push(ring_v[r_idx + 1].get_vert_idx(seg_idx) as u32);
+                    indices.push(ring_v[r_idx].get_vert_idx(seg_idx + 1) as u32);
+                }
             }
         }
 
-        Sphere {
-            verts: rings.into_iter().flat_map(|r| r.points).collect(),
+        Self {
+            verts: ring_v.into_iter().flat_map(|r| r.points).collect(),
             indices,
         }
     }
