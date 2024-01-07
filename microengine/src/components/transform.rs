@@ -60,8 +60,8 @@ impl Transform {
 
     pub fn calculate_local_to_world_matrix(&self) -> glm::Mat4 {
         let wrld = glm::translation(&self.position);
-        let wrld = glm::scale(&wrld, &self.scale);
         let wrld = wrld * glm::quat_to_mat4(&self.rotation);
+        let wrld = glm::scale(&wrld, &self.scale);
         wrld
     }
     
