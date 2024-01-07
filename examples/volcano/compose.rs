@@ -26,7 +26,7 @@ fn add_player(scene: &mut Scene) {
 }
 
 fn add_bubbles(scene: &mut Scene) {
-    let bubbles = Bubbles::new(200, 10.0, "asdads");
+    let bubbles = Bubbles::new(400, 10.0, "asdads");
     _ = scene.add_gameobject(bubbles, 2).unwrap()
 }
 

@@ -19,14 +19,14 @@ pub struct Terrain {
 impl Terrain {
     pub fn new() -> Self {
         let volcano_transform = Transform::new(
-            glm::Vec3::new(0.0, -2.0, -10.0),
+            glm::Vec3::new(0.0, -2.0, -100.0),
             glm::Vec3::new(0.0, 1.0, 0.0),
             glm::Vec3::new(3.0, 8.0, 3.0),
             );
         let ground_transform  = Transform::new(
+            glm::Vec3::new(0.0, 0.0, -40.0),
             glm::Vec3::new(0.0, 0.0, 0.0),
-            glm::Vec3::new(0.0, 0.0, 0.0),
-            glm::Vec3::new(5.0, 1.0, 20.0),
+            glm::Vec3::new(40.0, 1.0, 240.0),
             );
         Self {
             volcano_transform,

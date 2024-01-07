@@ -39,9 +39,9 @@ impl Player {
             camera_index: 0,
             speed: glm::Vec3::zeros(),
             reached_goal: false,
-            acceleration: 0.1,
+            acceleration: 0.8,
             friction: 0.95,
-            max_speed: 3.0,
+            max_speed: 7.0,
         }
     }
 

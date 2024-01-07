@@ -78,7 +78,7 @@ impl Bubbles {
             last_spawn_time: 0.0,
             spawn_frequency,
             rng: string_to_rng(seed.into()),
-            spawn_area: (glm::Vec3::new(-1.0, -0.3, -1.0), glm::Vec3::new(1.0, 0.0, 1.0)),
+            spawn_area: (glm::Vec3::new(-20.0, -0.75, -15.0), glm::Vec3::new(20.0, -0.25, -95.0)),
             mesh: BubbleMesh::new(0.4),
             player_id: None,
         }
@@ -86,11 +86,11 @@ impl Bubbles {
 
     fn random_position(spawn_area: &(glm::Vec3, glm::Vec3), rng: &mut StdRng) -> glm::Vec3 {
         let mut x = rng.next_u32() as f32 / u32::MAX as f32;
-        x = x * (spawn_area.1.x - spawn_area.0.x).abs() + spawn_area.0.x;
+        x = x * (spawn_area.1.x - spawn_area.0.x) + spawn_area.0.x;
         let mut y = rng.next_u32() as f32 / u32::MAX as f32;
-        y = y * (spawn_area.1.y - spawn_area.0.y).abs() + spawn_area.0.y;
+        y = y * (spawn_area.1.y - spawn_area.0.y) + spawn_area.0.y;
         let mut z = rng.next_u32() as f32 / u32::MAX as f32;
-        z = z * (spawn_area.1.z - spawn_area.0.z).abs() + spawn_area.0.z;
+        z = z * (spawn_area.1.z - spawn_area.0.z) + spawn_area.0.z;
         glm::Vec3::new(x, y, z)
 
     }
