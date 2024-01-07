@@ -10,12 +10,12 @@ use microengine::components::{
     transform::Transform
 };
 
-
-
 pub struct Player {
     transform: Transform,
+    tail_transform: Transform,
+    blade1_transform: Transform,
+    blade2_transform: Transform,
     mesh: PlayerMesh,
-    radius: f32,
     cameras: Vec<Box<dyn CameraObject>>,
     camera_index: usize,
     reached_goal: bool,
@@ -28,13 +28,32 @@ pub struct Player {
 
 impl Player {
     pub fn new() -> Self {
-        let radius = 0.2;
+        let mut tail_transform = Transform::new(
+            glm::Vec3::new(0.0, 0.25, 1.0),
+            glm::Vec3::new(0.0, 0.0, 0.0),
+            glm::Vec3::new(0.15, 0.15, 1.7),
+            );
+        tail_transform.rotate(glm::Vec3::x(), -0.3, microengine::components::transform::Space::Local);
         let mut transform = Transform::default();
-        *transform.scale_mut() = glm::Vec3::new(radius, radius, radius);
+
+        let mut blade1_transform = Transform::new(
+            glm::Vec3::new(0.0, 0.5, 0.0),
+            glm::Vec3::new(0.0, std::f32::consts::PI/2.0, 0.0),
+            glm::Vec3::new(0.25, 0.25, 2.5),
+            );
+        let mut blade2_transform = Transform::new(
+            glm::Vec3::new(0.0, 0.5, 0.0),
+            glm::Vec3::new(0.0, std::f32::consts::PI, 0.0),
+            glm::Vec3::new(0.25, 0.25, 2.5),
+            );
+
+        *transform.scale_mut() = glm::Vec3::new(0.3, 0.3, 0.3);
         Self {
             transform,
-            mesh: PlayerMesh::new(radius),
-            radius,
+            tail_transform,
+            blade1_transform,
+            blade2_transform,
+            mesh: PlayerMesh::new(),
             cameras: Vec::with_capacity(3),
             camera_index: 0,
             speed: glm::Vec3::zeros(),
@@ -137,6 +156,9 @@ impl GameObject for Player {
     }
 
     fn update(&mut self, ctx: &Context, _scene: &Scene) -> GameResult {
+        self.blade1_transform.rotate(glm::Vec3::y(), 7.0 * ctx.time.delta_time() as f32, microengine::components::transform::Space::Local);
+        self.blade2_transform.rotate(glm::Vec3::y(), 7.0 * ctx.time.delta_time() as f32, microengine::components::transform::Space::Local);
+
         if ctx.input.kb.get_key_down(KeyCode::KeyTab) {
             self.next_camera();
         }
@@ -165,6 +187,9 @@ impl GameObject for Player {
         } else {
             self.mesh.draw(
                 self.active_camera().world_to_projection_matrix() * self.transform.local_to_world(),
+                &self.tail_transform.local_to_world(),
+                &self.blade1_transform.local_to_world(),
+                &self.blade2_transform.local_to_world(),
                 ctx.time.get_timestamp() as f32
             );
             Ok(()) 
