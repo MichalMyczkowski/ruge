@@ -10,6 +10,7 @@ pub struct BubbleMesh{
     texture: Texture,
     radius: f32,
     indices: usize,
+    sphere: primitives::Sphere,
 }
 
 impl BubbleMesh {
@@ -21,28 +22,33 @@ impl BubbleMesh {
             texture: Texture::from(TEXTURE_PATH),
             radius,
             indices: sphere.indices.len(),
+            sphere,
         };
-        t.set_buffers(sphere);
         t
     }
 
-    fn set_buffers(&self, sphere: primitives::Sphere) {
-
+    fn update_buffers(&self, mvps: &Vec<f32>, colors: &Vec<f32>, count: usize) {
+        let vert_len = self.sphere.verts.len() * 3;
+        let buffer = self.sphere.verts
+            .iter()
+            .flat_map(|v| vec![v.x, v.y, v.z])
+            .chain( mvps.iter().map(|x| *x).collect::<Vec<f32>>() )
+            .chain( colors.iter().map(|x| *x).collect::<Vec<f32>>() )
+            .collect::<Vec<f32>>();
         self.program.bind_buffers();
         unsafe {
             gl::BufferData(
                 gl::ARRAY_BUFFER,
-                (3 * sphere.verts.len() * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr,
-                sphere.verts.as_ptr() as *const gl::types::GLvoid,
-                gl::STATIC_DRAW,
+                (buffer.len() * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr,
+                buffer.as_ptr() as *const gl::types::GLvoid,
+                gl::DYNAMIC_DRAW,
             );
             gl::BufferData(
                 gl::ELEMENT_ARRAY_BUFFER,
-                (sphere.indices.len() * std::mem::size_of::<u32>()) as gl::types::GLsizeiptr,
-                sphere.indices.as_ptr() as *const gl::types::GLvoid,
-                gl::STATIC_DRAW,
+                (self.sphere.indices.len() * std::mem::size_of::<u32>()) as gl::types::GLsizeiptr,
+                self.sphere.indices.as_ptr() as *const gl::types::GLvoid,
+                gl::DYNAMIC_DRAW,
             );
-
             // vertex data
             gl::EnableVertexAttribArray(0);
             gl::VertexAttribPointer(
@@ -53,11 +59,70 @@ impl BubbleMesh {
                 (3 * std::mem::size_of::<f32>()) as gl::types::GLint,
                 std::ptr::null(),
             );
-            gl::Enable(gl::CULL_FACE); 
+            // model matrix 
+            gl::EnableVertexAttribArray(1);
+            gl::EnableVertexAttribArray(2);
+            gl::EnableVertexAttribArray(3);
+            gl::EnableVertexAttribArray(4);
+            // 1st column
+            gl::VertexAttribPointer(
+                1,
+                4,
+                gl::FLOAT,
+                gl::FALSE,
+                (4 * 4 * std::mem::size_of::<f32>()) as gl::types::GLint,
+                ((vert_len + 0) * std::mem::size_of::<f32>()) as *const gl::types::GLvoid,
+            );
+            // 2nd column
+            gl::VertexAttribPointer(
+                2,
+                4,
+                gl::FLOAT,
+                gl::FALSE,
+                (4 * 4 * std::mem::size_of::<f32>()) as gl::types::GLint,
+                ((vert_len + 4) * std::mem::size_of::<f32>()) as *const gl::types::GLvoid,
+            );
+            // 3rd column
+            gl::VertexAttribPointer(
+                3,
+                4,
+                gl::FLOAT,
+                gl::FALSE,
+                (4 * 4 * std::mem::size_of::<f32>()) as gl::types::GLint,
+                ((vert_len + 8) * std::mem::size_of::<f32>()) as *const gl::types::GLvoid,
+            );
+            // 4th column
+            gl::VertexAttribPointer(
+                4,
+                4,
+                gl::FLOAT,
+                gl::FALSE,
+                (4 * 4 * std::mem::size_of::<f32>()) as gl::types::GLint,
+                ((vert_len + 12) * std::mem::size_of::<f32>()) as *const gl::types::GLvoid,
+            );
+            gl::EnableVertexAttribArray(5);
+            // colors
+            gl::VertexAttribPointer(
+                5,
+                1,
+                gl::FLOAT,
+                gl::FALSE,
+                (1 * std::mem::size_of::<f32>()) as gl::types::GLint,
+                ((vert_len + 16 * count) * std::mem::size_of::<f32>()) as *const gl::types::GLvoid,
+            );
+            // split attribs by each instance
+            gl::VertexAttribDivisor(1, 1);
+            gl::VertexAttribDivisor(2, 1);
+            gl::VertexAttribDivisor(3, 1);
+            gl::VertexAttribDivisor(4, 1);
+            gl::VertexAttribDivisor(5, 1);
         }
+
     }
 
+    // TODO: pass projection matrix as uniform and multiply in vertex shader instead
     pub fn draw(&self, mvps: &Vec<f32>, colors: &Vec<f32>, time: f32, count: usize) {
+        self.update_buffers(mvps, colors, count);
         self.program.bind_program();
         self.program.bind_vao();
         self.texture.bind_texture();
@@ -69,17 +134,6 @@ impl BubbleMesh {
             gl::Uniform1f(
                 self.program.get_uniform_location("radius"),
                 self.radius,
-            );
-            gl::Uniform1fv( 
-                self.program.get_uniform_location("colors"),
-                count as i32,
-                colors.as_ptr() as *const f32
-            );
-            gl::UniformMatrix4fv( 
-                self.program.get_uniform_location("mvps"),
-                count as i32,
-                gl::FALSE, 
-                mvps.as_ptr() as *const f32
             );
             gl::DrawElementsInstanced(
                 gl::TRIANGLES,
