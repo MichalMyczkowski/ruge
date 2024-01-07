@@ -39,8 +39,10 @@ pub struct Player {
 impl Player {
     pub fn new() -> Self {
         let radius = 0.2;
+        let mut transform = Transform::default();
+        *transform.scale_mut() = glm::Vec3::new(radius, radius, radius);
         Self {
-            transform: Transform::default(),
+            transform,
             mesh: PlayerMesh::new(radius),
             radius,
             cameras: Vec::with_capacity(3),

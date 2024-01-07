@@ -16,7 +16,7 @@ pub struct PlayerMesh{
 impl PlayerMesh {
 
     pub fn new(radius: f32) -> Self {
-        let sphere = primitives::Sphere::new(radius, 23, 17);
+        let sphere = primitives::Sphere::new(23, 17);
         let t = Self {
             program: CompiledProgram::new(VERT_SHADER_PATH, FRAG_SHADER_PATH),
             texture: Texture::from(TEXTURE_PATH),
