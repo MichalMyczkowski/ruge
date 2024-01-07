@@ -1,4 +1,4 @@
-use std::iter;
+use std::iter::{self, repeat};
 
 /// Helping structure
 struct Ring {
@@ -50,6 +50,7 @@ impl Ring {
 
 pub struct Sphere {
     pub verts: Vec<glm::Vec3>,
+    pub normals: Vec<glm::Vec3>,
     pub indices: Vec<u32>,
 }
 
@@ -59,6 +60,7 @@ impl Sphere {
         Self {
             verts: s.verts,
             indices: s.indices,
+            normals: s.normals,
         }
     }
 }
@@ -66,6 +68,7 @@ impl Sphere {
 
 pub struct SolidOfRevolution {
     pub verts: Vec<glm::Vec3>,
+    pub normals: Vec<glm::Vec3>,
     pub indices: Vec<u32>,
 } 
 
@@ -133,9 +136,31 @@ impl SolidOfRevolution {
                 }
             }
         }
+        let verts = ring_v.into_iter().flat_map(|r| r.points).collect::<Vec<glm::Vec3>>(); 
+        
+        // normal vectors calculation borrowed from: https://iquilezles.org/articles/normals/
+        let mut normals = repeat(glm::Vec3::zeros()).take(verts.len()).collect::<Vec<glm::Vec3>>();
+        indices.chunks(3).for_each(|tri| {
+            let idx_a = *tri.get(0).unwrap() as usize;
+            let idx_b = *tri.get(1).unwrap() as usize;
+            let idx_c = *tri.get(2).unwrap() as usize;
+
+            let va = verts[idx_a];
+            let vb = verts[idx_b];
+            let vc = verts[idx_c];
+
+            let e1 = va - vb;
+            let e2 = vc - vb;
+            let no = glm::cross(&e1, &e2);
+
+            normals[idx_a] += no;
+            normals[idx_b] += no;
+            normals[idx_c] += no;
+        });
 
         Self {
-            verts: ring_v.into_iter().flat_map(|r| r.points).collect(),
+            verts,
+            normals,
             indices,
         }
     }
