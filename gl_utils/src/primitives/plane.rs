@@ -1,8 +1,9 @@
-use std::iter;
+use std::iter::{self, repeat};
 
 pub struct Plane {
     pub verts: Vec<glm::Vec3>,
     pub indices: Vec<u32>,
+    pub normals: Vec<glm::Vec3>,
 }
 
 impl Plane {
@@ -46,8 +47,11 @@ impl Plane {
             }
         }
 
+        let verts = verts.into_iter().flatten().collect::<Vec<glm::Vec3>>();
+        let normals = repeat(glm::Vec3::y()).take(verts.len()).collect::<Vec<glm::Vec3>>();
         Self {
-            verts: verts.into_iter().flatten().collect::<Vec<glm::Vec3>>(),
+            verts,
+            normals,
             indices,
         }
     }

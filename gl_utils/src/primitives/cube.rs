@@ -4,6 +4,7 @@ pub struct Cube {
     pub verts: Vec<glm::Vec3>,
     pub indices: Vec<u32>,
     pub texture_coordinates: Vec<glm::Vec2>,
+    pub normals: Vec<glm::Vec3>,
 }
 
 impl Cube {
@@ -40,6 +41,38 @@ impl Cube {
             glm::Vec3::new(1.0, 0.0, 0.0),
             glm::Vec3::new(1.0, 0.0, -1.0),
         ];
+        let mut normals = vec![
+            // #1
+            glm::Vec3::new(0.0, 0.0, 1.0),
+            glm::Vec3::new(0.0, 0.0, 1.0),
+            glm::Vec3::new(0.0, 0.0, 1.0),
+            glm::Vec3::new(0.0, 0.0, 1.0),
+            // #2
+            glm::Vec3::new(1.0, 0.0, 0.0),
+            glm::Vec3::new(1.0, 0.0, 0.0),
+            glm::Vec3::new(1.0, 0.0, 0.0),
+            glm::Vec3::new(1.0, 0.0, 0.0),
+            // #3
+            glm::Vec3::new(0.0, 0.0, -1.0),
+            glm::Vec3::new(0.0, 0.0, -1.0),
+            glm::Vec3::new(0.0, 0.0, -1.0),
+            glm::Vec3::new(0.0, 0.0, -1.0),
+            // #4
+            glm::Vec3::new(-1.0, 0.0, 0.0),
+            glm::Vec3::new(-1.0, 0.0, 0.0),
+            glm::Vec3::new(-1.0, 0.0, 0.0),
+            glm::Vec3::new(-1.0, 0.0, 0.0),
+            // #5
+            glm::Vec3::new(0.0, -1.0, 0.0),
+            glm::Vec3::new(0.0, -1.0, 0.0),
+            glm::Vec3::new(0.0, -1.0, 0.0),
+            glm::Vec3::new(0.0, -1.0, 0.0),
+            // #6
+            glm::Vec3::new(0.0, 1.0, 0.0),
+            glm::Vec3::new(0.0, 1.0, 0.0),
+            glm::Vec3::new(0.0, 1.0, 0.0),
+            glm::Vec3::new(0.0, 1.0, 0.0),
+        ];
         verts.iter_mut().for_each(|v| {
             v.x -= 0.5;
             v.y -= 0.5;
@@ -63,6 +96,7 @@ impl Cube {
         Self {
             verts,
             indices,
+            normals,
             texture_coordinates,
         }
     }
