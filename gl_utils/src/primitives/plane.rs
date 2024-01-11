@@ -3,6 +3,7 @@ use std::iter::{self, repeat};
 pub struct Plane {
     pub verts: Vec<glm::Vec3>,
     pub indices: Vec<u32>,
+    pub texture_coordinates: Vec<glm::Vec2>,
     pub normals: Vec<glm::Vec3>,
 }
 
@@ -31,6 +32,9 @@ impl Plane {
             x += offset;
             v
         }).take(vert_capacity).collect::<Vec<Vec<glm::Vec3>>>();
+        let texture_coordinates = verts.iter().flatten().map(|v| {
+            glm::Vec2::new((v.x + 1.0) / 2.0, (v.z + 1.0) / 2.0)
+        }).collect();
         
         // calculate indices
         let mut indices: Vec<u32> = Vec::with_capacity((vert_capacity - 1).pow(2) * 2);
@@ -46,12 +50,12 @@ impl Plane {
                 indices.push(Self::get_idx(row + 1, column + 1, vert_capacity));
             }
         }
-
         let verts = verts.into_iter().flatten().collect::<Vec<glm::Vec3>>();
         let normals = repeat(glm::Vec3::y()).take(verts.len()).collect::<Vec<glm::Vec3>>();
         Self {
             verts,
             normals,
+            texture_coordinates,
             indices,
         }
     }

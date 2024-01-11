@@ -56,7 +56,7 @@ pub struct Sphere {
 
 impl Sphere {
     pub fn new(segments: usize, rings: usize) -> Self {
-        let s = SolidOfRevolution::new(2.0, segments, rings + 2, false, |x| (1.0f32 - x.powi(2)).sqrt());
+        let s = SolidOfRevolution::new(2.0, segments, rings + 2, true, |x| (1.0f32 - x.powi(2)).sqrt());
         Self {
             verts: s.verts,
             indices: s.indices,
@@ -157,7 +157,7 @@ impl SolidOfRevolution {
             normals[idx_b] += no;
             normals[idx_c] += no;
         });
-
+        normals.iter_mut().for_each(|n| *n = glm::normalize(n));
         Self {
             verts,
             normals,
