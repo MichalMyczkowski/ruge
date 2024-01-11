@@ -70,6 +70,14 @@ impl Program {
         loc
     }
 
+    pub fn bind_uniform_to_block_idx(&self, name: &str, block_idx: u32) {
+        let mut loc: GLuint = 0;
+        unsafe {
+            loc = gl::GetUniformBlockIndex(self.id(), (&CString::new(name).unwrap()).as_ptr());
+            gl::UniformBlockBinding(self.id(), loc, block_idx);
+        }
+    }
+
     pub fn set_used(&self) {
         unsafe {
             gl::UseProgram(self.id);

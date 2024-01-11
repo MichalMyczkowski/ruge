@@ -58,6 +58,10 @@ impl CompiledProgram {
     pub fn get_uniform_location(&self, name: &str) -> GLint {
         self.program.get_uniform_location(name)
     }
+    
+    pub fn bind_uniform_to_block_idx(&self, name: &str, block_idx: u32) {
+        self.program.bind_uniform_to_block_idx(name, block_idx);
+    }
 
     pub fn bind_vao(&self) {
         unsafe {
