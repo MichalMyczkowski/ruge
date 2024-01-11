@@ -27,8 +27,6 @@ impl GroundMesh {
             vert_offset: (ground.verts[1].z - ground.verts[0].z).abs(),
 
         };
-        println!("ground texcoord[0] = {}, ground texcoord[1] {}", ground.texture_coordinates[0], ground.texture_coordinates[1]);
-        println!("coord_offset: {}, vert_offset: {}", t.coord_offset, t.vert_offset);
         t.set_buffers(ground);
         t
     }
