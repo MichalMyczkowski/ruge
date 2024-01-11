@@ -10,8 +10,10 @@ use microengine::components::{
     transform::Transform
 };
 
+use super::light::{LightColor, SpotLight, LightType, LightObject};
+
 pub struct Player {
-    transform: Transform,
+    pub transform: Transform,
     tail_transform: Transform,
     blade1_transform: Transform,
     blade2_transform: Transform,
@@ -24,6 +26,9 @@ pub struct Player {
     acceleration: f32,
     friction: f32,
     max_speed: f32,
+    // light
+    light_id: Option<GameObjectId>,
+    
 }
 
 impl Player {
@@ -36,12 +41,12 @@ impl Player {
         tail_transform.rotate(glm::Vec3::x(), -0.3, microengine::components::transform::Space::Local);
         let mut transform = Transform::default();
 
-        let mut blade1_transform = Transform::new(
+        let blade1_transform = Transform::new(
             glm::Vec3::new(0.0, 0.5, 0.0),
             glm::Vec3::new(0.0, std::f32::consts::PI/2.0, 0.0),
             glm::Vec3::new(0.25, 0.25, 2.5),
             );
-        let mut blade2_transform = Transform::new(
+        let blade2_transform = Transform::new(
             glm::Vec3::new(0.0, 0.5, 0.0),
             glm::Vec3::new(0.0, std::f32::consts::PI, 0.0),
             glm::Vec3::new(0.25, 0.25, 2.5),
@@ -61,6 +66,7 @@ impl Player {
             acceleration: 0.8,
             friction: 0.95,
             max_speed: 7.0,
+            light_id: None,
         }
     }
 
@@ -111,6 +117,14 @@ impl Player {
             self.speed = glm::Vec3::zeros();
         }
     }
+
+    fn update_light(&mut self, light: &LightObject) {
+        let mut l = light.light.borrow_mut();
+        if let LightType::Spot(ref mut l) = *l {
+            l.position = glm::vec3_to_vec4(self.transform.position());
+            l.direction = glm::vec3_to_vec4(&self.active_camera().transform.vector_to_world(&(glm::Vec3::z() * -1.0)));
+        }
+    }
 }
 
 impl GameObject for Player {
@@ -147,6 +161,11 @@ impl GameObject for Player {
                 )
             ),
         );
+        // create light object
+        let color = LightColor::new(glm::Vec3::new(0.0, 0.0, 0.0), glm::Vec3::new(0.6, 0.6, 0.6), glm::Vec3::new(0.8, 0.8, 0.8));
+        let spot_light = SpotLight::new(*self.transform.position(), -1.0 * glm::Vec3::z(), color, 0.99, 0.97);
+        let spot_light = LightType::Spot(spot_light);
+        self.light_id = Some(scene.add_gameobject(LightObject::new(spot_light), 0).unwrap()); 
         Ok(())
     }
 
@@ -155,7 +174,7 @@ impl GameObject for Player {
         Ok(())
     }
 
-    fn update(&mut self, ctx: &Context, _scene: &Scene) -> GameResult {
+    fn update(&mut self, ctx: &Context, scene: &Scene) -> GameResult {
         self.blade1_transform.rotate(glm::Vec3::y(), 7.0 * ctx.time.delta_time() as f32, microengine::components::transform::Space::Local);
         self.blade2_transform.rotate(glm::Vec3::y(), 7.0 * ctx.time.delta_time() as f32, microengine::components::transform::Space::Local);
 
@@ -176,6 +195,12 @@ impl GameObject for Player {
             },
             CameraType::ThirdPerson => {
                 self.move_player(ctx);
+            }
+        }
+        // update light
+        if let Some(ref id) = self.light_id {
+            if let Some(ref light) = scene.gameobject_by_id::<LightObject>(id) {
+                self.update_light(light);
             }
         }
         Ok(())

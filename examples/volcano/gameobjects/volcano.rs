@@ -6,7 +6,6 @@ use super::player::Player;
 use microengine::components::transform::Transform;
 use microengine::prelude::*;
 
-
 pub struct Terrain {
     pub volcano_transform: Transform,
     pub ground_transform: Transform,
@@ -14,7 +13,6 @@ pub struct Terrain {
     ground_mesh: GroundMesh,
     player_id: Option<GameObjectId>,
 }
-
 
 impl Terrain {
     pub fn new() -> Self {
@@ -24,7 +22,7 @@ impl Terrain {
             glm::Vec3::new(3.0, 8.0, 3.0),
             );
         let ground_transform  = Transform::new(
-            glm::Vec3::new(0.0, 0.0, -40.0),
+            glm::Vec3::new(0.0, -16.0, -40.0),
             glm::Vec3::new(0.0, 0.0, 0.0),
             glm::Vec3::new(40.0, 1.0, 240.0),
             );

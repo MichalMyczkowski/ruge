@@ -1,5 +1,6 @@
 pub mod mesh;
 use mesh::BubbleMesh;
+use super::light_proxy::LightProxy;
 use super::player::Player;
 
 use std::iter;
@@ -25,7 +26,8 @@ pub struct Bubble {
 }
 
 impl Bubble {
-    pub fn new(transform: Transform, time: f32, max_time: f32, color_idx: f32) -> Self {
+    pub fn new(mut transform: Transform, time: f32, max_time: f32, color_idx: f32) -> Self {
+        *transform.scale_mut() *= 0.05;
         Self {
             transform,
             start_time: time,
@@ -49,6 +51,9 @@ impl Bubble {
             self.is_dead = true;
         } else {
             self.transform.position_mut().y += self.speed * ctx.time.delta_time() as f32;
+            self.transform.scale_mut().x += 0.15 * ctx.time.delta_time() as f32;
+            self.transform.scale_mut().y += 0.15 * ctx.time.delta_time() as f32;
+            self.transform.scale_mut().z += 0.15 * ctx.time.delta_time() as f32;
         }
     }
 }
@@ -56,6 +61,7 @@ impl Bubble {
 
 pub struct Bubbles {
     bubbles: Vec<Option<Bubble>>,
+    transparent: bool,
     bubble_count: usize,
     max_bubbles: usize,
     spawn_area: (glm::Vec3, glm::Vec3),
@@ -66,6 +72,7 @@ pub struct Bubbles {
     rng: StdRng,
     mesh: BubbleMesh,
     player_id: Option<GameObjectId>,
+    light_proxy_id: Option<GameObjectId>,
 }
 
 impl Bubbles {
@@ -73,14 +80,16 @@ impl Bubbles {
         Self {
             bubbles: iter::repeat_with(|| None).take(max_bubbles).collect(),
             bubble_count: 0,
+            transparent: true,
             max_bubbles,
             bubble_lifetime: 8.0,
             last_spawn_time: 0.0,
             spawn_frequency,
             rng: string_to_rng(seed.into()),
-            spawn_area: (glm::Vec3::new(-20.0, -0.75, -15.0), glm::Vec3::new(20.0, -0.25, -95.0)),
+            spawn_area: (glm::Vec3::new(-20.0, -5.75, -15.0), glm::Vec3::new(20.0, -3.25, -95.0)),
             mesh: BubbleMesh::new(0.4),
             player_id: None,
+            light_proxy_id: None,
         }
     }
 
@@ -114,8 +123,8 @@ impl Bubbles {
 impl GameObject for Bubbles {
     fn start(&mut self, ctx: &Context, scene: &Scene) -> GameResult {
         self.last_spawn_time = ctx.time.get_timestamp() as f32; 
-        let player_id = scene.get_gameobject_id("player").unwrap();
-        self.player_id = Some(player_id);
+        self.player_id = scene.get_gameobject_id("player");
+        self.light_proxy_id = scene.get_gameobject_id("light");
         Ok(())
     }
 
@@ -136,6 +145,12 @@ impl GameObject for Bubbles {
                 }
             }
         });
+
+
+        // input
+        if ctx.input.kb.get_key_down(KeyCode::KeyT) {
+            self.transparent = if self.transparent { false } else { true };
+        }
         
         Ok(())
     }
@@ -170,12 +185,19 @@ impl GameObject for Bubbles {
         });
        
         let projection = camera.world_to_projection_matrix();
-        let mvps = self.bubbles.iter_mut().take(self.bubble_count).flat_map(|b| {
-            (projection * b.as_mut().unwrap().transform.local_to_world()).iter().map(|&x| x).collect::<Vec<f32>>()
+        let models = self.bubbles.iter_mut().take(self.bubble_count).flat_map(|b| {
+            (b.as_mut().unwrap().transform.local_to_world()).iter().map(|&x| x).collect::<Vec<f32>>()
         }).collect::<Vec<f32>>();
         let colors = self.bubbles.iter().take(self.bubble_count).map(|b| b.as_ref().unwrap().color_idx).collect::<Vec<f32>>();
-        self.mesh.draw(&mvps, &colors, ctx.time.delta_time() as f32, self.bubble_count);
-
+        self.mesh.draw(
+            &models,
+            &colors,
+            &projection,
+            camera.transform.position(),
+            ctx.time.get_timestamp() as f32,
+            self.bubble_count,
+            self.transparent
+        );
 
         Ok(())
     }

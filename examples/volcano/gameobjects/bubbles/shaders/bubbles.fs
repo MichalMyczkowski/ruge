@@ -1,11 +1,166 @@
 #version 330 
-in float texture_coord_x;
-uniform sampler2D gradient;
 
-out vec4 out_color;
+// TODO! import light data with gl_utils preprocessor (not yet implemented)
+struct Material {
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+    float shininess;
+}; 
 
-void main(void) {
-    out_color = texture(gradient, vec2(texture_coord_x, 0.0));
-    out_color.a = 0.2;
+struct LightColor {
+    vec4 ambient;
+    vec4 diffuse;
+    vec4 specular;
+};
+
+struct DirLight {
+    vec4 direction;
+    LightColor color;
+};  
+
+struct PointLight {
+    vec4 position;
+    LightColor color;
+    float constant;
+    float linear;
+    float quadratic;
+    float _padding1;
+}; 
+
+struct SpotLight {
+    vec4  position;
+    vec4 direction;
+    LightColor color;
+    float cutoff;
+    float outer_cutoff;
+    float _padding2;
+    float _padding3;
+};
+
+float calculate_specular(vec3 viewDir, vec3 normal, vec3 lightDir, float shininess) {
+     // Calculate the cosine of the angle between the reflection vector
+     // and the vector going to the camera.
+     vec3 reflection = normalize(2.0 * dot(normal, lightDir) * normal - lightDir);
+     viewDir = normalize( -viewDir );
+     float cos_angle = dot(reflection, -viewDir);
+     cos_angle = clamp(cos_angle, 0.0, 1.0);
+     return pow(cos_angle, shininess);
+}
+
+vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir, Material material, int idx, int max_idx)
+{
+    if (idx >= max_idx) {
+        return vec3(0.0);
+    }
+    vec3 lightDir = normalize(vec3(light.direction));
+    // diffuse shading
+    float diff = max(dot(normal, lightDir), 0.0);
+    // specular shading
+    float spec = calculate_specular(viewDir, normal, lightDir, material.shininess);
+    // combine results
+    vec3 ambient  = vec3(light.color.ambient)  * material.ambient;
+    vec3 diffuse  = vec3(light.color.diffuse)  * diff * material.diffuse;
+    vec3 specular = vec3(light.color.specular) * spec * material.specular;
+    return (ambient + diffuse + specular);
 } 
 
+vec3 CalcSpotLight(SpotLight light, vec3 frag_pos, vec3 normal, vec3 viewDir, Material material, int idx, int max_idx)
+{
+    if (idx >= max_idx) {
+        return vec3(0.0);
+    }
+    vec3 lightDir = normalize(frag_pos - vec3(light.position));
+    float theta = dot(lightDir, normalize(vec3(light.direction)));
+    float epsilon   = light.cutoff - light.outer_cutoff;
+    float intensity = clamp((theta - light.outer_cutoff) / epsilon, 0.0, 1.0);
+    // diffuse shading
+    float diff = max(dot(normal, lightDir), 0.0);
+    // specular shading
+    float spec = calculate_specular(viewDir, normal, vec3(light.direction), material.shininess);
+    // combine results
+    vec3 diffuse  = vec3(light.color.diffuse)  * diff * material.diffuse * intensity;
+    vec3 specular = vec3(light.color.specular) * spec * material.specular * intensity;
+    return (diffuse + specular);
+} 
+
+/// - light_proxy
+#define MAX_LIGHT_COUNT 16
+layout (std140) uniform LightData {
+    DirLight dir_lights[MAX_LIGHT_COUNT];
+    PointLight point_lights[MAX_LIGHT_COUNT];
+    SpotLight spot_lights[MAX_LIGHT_COUNT];
+    int dir_light_count;
+    int point_light_count;
+    int spot_light_count;
+    int _padding;
+};
+
+/// -- shader code
+
+in float texture_coord_x;
+in vec3 frag_pos;
+in vec3 frag_normal;
+in vec4 cam_pos;
+
+uniform sampler2D gradient;
+uniform float time;
+uniform int transparent;
+
+out vec4 f_color;
+
+void main()
+{
+    vec3 diffuse_clr = vec3(texture(gradient, vec2(texture_coord_x, 0.0)).rgb);
+    Material material = Material(
+        diffuse_clr,
+        diffuse_clr,
+        diffuse_clr,
+        32.0 
+    );
+    // calculate color
+    vec3 out_color = vec3(0.0);
+    vec3 view_dir = normalize(frag_pos - vec3(cam_pos));
+    // dynamic uniform indexing was not working so this is the solution
+    // calculate directional light
+    out_color += CalcDirLight(dir_lights[0], vec3(frag_normal), view_dir, material, 0, dir_light_count);
+    out_color += CalcDirLight(dir_lights[1], vec3(frag_normal), view_dir, material, 1, dir_light_count);
+    out_color += CalcDirLight(dir_lights[2], vec3(frag_normal), view_dir, material, 2, dir_light_count);
+    out_color += CalcDirLight(dir_lights[3], vec3(frag_normal), view_dir, material, 3, dir_light_count);
+    out_color += CalcDirLight(dir_lights[4], vec3(frag_normal), view_dir, material, 4, dir_light_count);
+    out_color += CalcDirLight(dir_lights[5], vec3(frag_normal), view_dir, material, 5, dir_light_count);
+    out_color += CalcDirLight(dir_lights[6], vec3(frag_normal), view_dir, material, 6, dir_light_count);
+    out_color += CalcDirLight(dir_lights[7], vec3(frag_normal), view_dir, material, 7, dir_light_count);
+    out_color += CalcDirLight(dir_lights[8], vec3(frag_normal), view_dir, material, 8, dir_light_count);
+    out_color += CalcDirLight(dir_lights[9], vec3(frag_normal), view_dir, material, 9, dir_light_count);
+    out_color += CalcDirLight(dir_lights[10], vec3(frag_normal), view_dir, material, 10, dir_light_count);
+    out_color += CalcDirLight(dir_lights[11], vec3(frag_normal), view_dir, material, 11, dir_light_count);
+    out_color += CalcDirLight(dir_lights[12], vec3(frag_normal), view_dir, material, 12, dir_light_count);
+    out_color += CalcDirLight(dir_lights[13], vec3(frag_normal), view_dir, material, 13, dir_light_count);
+    out_color += CalcDirLight(dir_lights[14], vec3(frag_normal), view_dir, material, 14, dir_light_count);
+    out_color += CalcDirLight(dir_lights[15], vec3(frag_normal), view_dir, material, 15, dir_light_count);
+    // calculate spot lights
+    out_color += CalcSpotLight(spot_lights[0], frag_pos, vec3(frag_normal), view_dir, material, 0, spot_light_count);
+    out_color += CalcSpotLight(spot_lights[1], frag_pos, vec3(frag_normal), view_dir, material, 1, spot_light_count);
+    out_color += CalcSpotLight(spot_lights[2], frag_pos, vec3(frag_normal), view_dir, material, 2, spot_light_count);
+    out_color += CalcSpotLight(spot_lights[3], frag_pos, vec3(frag_normal), view_dir, material, 3, spot_light_count);
+    out_color += CalcSpotLight(spot_lights[4], frag_pos, vec3(frag_normal), view_dir, material, 4, spot_light_count);
+    out_color += CalcSpotLight(spot_lights[5], frag_pos, vec3(frag_normal), view_dir, material, 5, spot_light_count);
+    out_color += CalcSpotLight(spot_lights[6], frag_pos, vec3(frag_normal), view_dir, material, 6, spot_light_count);
+    out_color += CalcSpotLight(spot_lights[7], frag_pos, vec3(frag_normal), view_dir, material, 7, spot_light_count);
+    out_color += CalcSpotLight(spot_lights[8], frag_pos, vec3(frag_normal), view_dir, material, 8, spot_light_count);
+    out_color += CalcSpotLight(spot_lights[9], frag_pos, vec3(frag_normal), view_dir, material, 9, spot_light_count);
+    out_color += CalcSpotLight(spot_lights[10], frag_pos, vec3(frag_normal), view_dir, material, 10, spot_light_count);
+    out_color += CalcSpotLight(spot_lights[11], frag_pos, vec3(frag_normal), view_dir, material, 11, spot_light_count);
+    out_color += CalcSpotLight(spot_lights[12], frag_pos, vec3(frag_normal), view_dir, material, 12, spot_light_count);
+    out_color += CalcSpotLight(spot_lights[13], frag_pos, vec3(frag_normal), view_dir, material, 13, spot_light_count);
+    out_color += CalcSpotLight(spot_lights[14], frag_pos, vec3(frag_normal), view_dir, material, 14, spot_light_count);
+    out_color += CalcSpotLight(spot_lights[15], frag_pos, vec3(frag_normal), view_dir, material, 15, spot_light_count);
+    // calculate point lights
+
+    if (transparent == 0) {
+        f_color = vec4(out_color, 1.0);
+    } else {
+        f_color = vec4(out_color, 0.8);
+    }
+} 
