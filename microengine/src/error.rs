@@ -10,6 +10,7 @@ pub enum GameError {
     GameLogicError(String),
     BackendError(String),
     EngineError(String),
+    Error(String),
 }
 
 impl fmt::Display for GameError {
@@ -21,6 +22,9 @@ impl fmt::Display for GameError {
             GameError::BackendError(ref s) => write!(f, "Backend GameError: {}", s),
             GameError::EngineError(ref s) => {
                 write!(f, "MicroEngine Error: {}\ni'm sorry :( ~dev", s)
+            }
+            GameError::Error(ref s) => {
+                write!(f, "Error: {}", s)
             }
         }
     }
