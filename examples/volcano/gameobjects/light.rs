@@ -72,10 +72,12 @@ impl GameObject for LightObject {
             self.light_proxy_id = scene.get_gameobject_id("light");
             if let Some(ref id) = self.light_proxy_id {
                 let proxy = scene.gameobject_by_id::<LightProxy>(id).unwrap();
-                match *self.light.borrow() {
-                    LightType::Directional(_) => proxy.unregister_directional_light(*id)?,
-                    LightType::Point(_) => proxy.unregister_point_light(*id)?,
-                    LightType::Spot(_) => proxy.unregister_spot_light(*id)?,
+                if let Some(ref id) = self.id {
+                    match *self.light.borrow() {
+                        LightType::Directional(_) => proxy.unregister_directional_light(*id)?,
+                        LightType::Point(_) => proxy.unregister_point_light(*id)?,
+                        LightType::Spot(_) => proxy.unregister_spot_light(*id)?,
+                    }
                 }
             } 
             self.dead = true;

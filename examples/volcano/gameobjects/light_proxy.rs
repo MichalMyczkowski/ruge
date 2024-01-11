@@ -62,7 +62,6 @@ impl LightProxy {
     }
     
     fn register_light(mut vec: RefMut<Vec<GameObjectId>>, light_id: GameObjectId, light_type: &str) -> GameResult {
-        println!("registering: {light_type}");
         if vec.len() == MAX_LIGHT_COUNT {
             return Err(GameError::Error(String::from("Trying to register more than supported lights of type: ") + light_type));
         }
@@ -71,11 +70,12 @@ impl LightProxy {
     }
 
     fn unregister_light(mut vec: RefMut<Vec<GameObjectId>>, light_id: GameObjectId, light_type: &str) -> GameResult {
-        println!("unregistering: {light_type}");
         let idx = vec.iter().position(|x| *x == light_id);
         match idx {
             Some(idx) => {vec.remove(idx);},
-            None => return Err(GameError::Error(String::from("Trying to unregister unregistered light of type: ") + light_type)),
+            None => { 
+                return Err(GameError::Error(String::from("Trying to unregister unregistered light of type: ") + light_type))
+            },
         }
         
         Ok(())
@@ -124,6 +124,23 @@ impl LightProxy {
                     (DIR_COUNT_OFFSET * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr,
                     (std::mem::size_of::<i32>()) as gl::types::GLsizeiptr,
                     dir_len.as_ptr() as *const gl::types::GLvoid,
+                );
+            }
+            // point lights
+            if self.point_lights.len() > 0 {
+                gl::BufferSubData(
+                    gl::UNIFORM_BUFFER,
+                    (POINT_STRUCT_OFFSET * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr,
+                    (self.point_lights.len() * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr,
+                    self.point_lights.as_ptr() as *const gl::types::GLvoid,
+                );
+                let point_len = self.registered_point_lights.borrow().len() as i32;
+                let point_len = vec![point_len];
+                gl::BufferSubData(
+                    gl::UNIFORM_BUFFER,
+                    (POINT_COUNT_OFFSET * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr,
+                    (std::mem::size_of::<i32>()) as gl::types::GLsizeiptr,
+                    point_len.as_ptr() as *const gl::types::GLvoid,
                 );
             }
             // spot lights

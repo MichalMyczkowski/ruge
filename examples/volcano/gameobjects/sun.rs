@@ -34,7 +34,7 @@ impl GameObject for Sun {
         let player_id = scene.get_gameobject_id("player").unwrap();
         self.player_id = Some(player_id);
         // create light object
-        let color = LightColor::new(glm::Vec3::new(0.1, 0.1, 0.1), glm::Vec3::new(0.7, 0.7, 0.7), glm::Vec3::new(0.9, 0.9, 0.9));
+        let color = LightColor::new(glm::Vec3::new(0.1, 0.1, 0.1), glm::Vec3::new(0.4, 0.4, 0.4), glm::Vec3::new(0.9, 0.9, 0.9));
         let dir_light = DirectionalLight::new(self.transform.position() - glm::Vec3::zeros(), color);
         let dir_light = LightType::Directional(dir_light);
         self.light_id = Some(scene.add_gameobject(LightObject::new(dir_light), 0).unwrap()); 

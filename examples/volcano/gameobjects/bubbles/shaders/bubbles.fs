@@ -65,6 +65,26 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir, Material material, 
     return (ambient + diffuse + specular);
 } 
 
+vec3 CalcPointLight(PointLight light, vec3 frag_pos, vec3 normal, vec3 viewDir, Material material, int idx, int max_idx)
+{
+    if (idx >= max_idx) {
+        return vec3(0.0);
+    }
+    float dist = length(vec3(light.position) - frag_pos);
+    float attenuation = 1.0 / (light.constant + light.linear * dist + light.quadratic * (dist * dist)); 
+
+    vec3 lightDir = normalize(frag_pos - vec3(light.position));
+    // diffuse shading
+    float diff = max(dot(normal, lightDir), 0.0);
+    // specular shading
+    float spec = calculate_specular(viewDir, normal, lightDir, material.shininess);
+    // combine results
+    vec3 ambient  = vec3(light.color.ambient)  * material.ambient * attenuation;
+    vec3 diffuse  = vec3(light.color.diffuse)  * diff * material.diffuse * attenuation;
+    vec3 specular = vec3(light.color.specular) * spec * material.specular * attenuation;
+    return (ambient + diffuse + specular);
+} 
+
 vec3 CalcSpotLight(SpotLight light, vec3 frag_pos, vec3 normal, vec3 viewDir, Material material, int idx, int max_idx)
 {
     if (idx >= max_idx) {
@@ -106,6 +126,7 @@ in vec4 cam_pos;
 uniform sampler2D gradient;
 uniform float time;
 uniform int transparent;
+uniform int is_good;
 
 out vec4 f_color;
 
@@ -118,6 +139,15 @@ void main()
         diffuse_clr,
         32.0 
     );
+    if (is_good == 1) {
+        diffuse_clr = vec3(0.0, 1.0, 0.0);
+        material = Material(
+        diffuse_clr,
+        diffuse_clr,
+        diffuse_clr,
+        64.0 
+        );
+    }
     // calculate color
     vec3 out_color = vec3(0.0);
     vec3 view_dir = normalize(frag_pos - vec3(cam_pos));
@@ -157,6 +187,22 @@ void main()
     out_color += CalcSpotLight(spot_lights[14], frag_pos, vec3(frag_normal), view_dir, material, 14, spot_light_count);
     out_color += CalcSpotLight(spot_lights[15], frag_pos, vec3(frag_normal), view_dir, material, 15, spot_light_count);
     // calculate point lights
+    out_color += CalcPointLight(point_lights[0], frag_pos, vec3(frag_normal), view_dir, material, 0, point_light_count);
+    out_color += CalcPointLight(point_lights[1], frag_pos, vec3(frag_normal), view_dir, material, 1, point_light_count);
+    out_color += CalcPointLight(point_lights[2], frag_pos, vec3(frag_normal), view_dir, material, 2, point_light_count);
+    out_color += CalcPointLight(point_lights[3], frag_pos, vec3(frag_normal), view_dir, material, 3, point_light_count);
+    out_color += CalcPointLight(point_lights[4], frag_pos, vec3(frag_normal), view_dir, material, 4, point_light_count);
+    out_color += CalcPointLight(point_lights[5], frag_pos, vec3(frag_normal), view_dir, material, 5, point_light_count);
+    out_color += CalcPointLight(point_lights[6], frag_pos, vec3(frag_normal), view_dir, material, 6, point_light_count);
+    out_color += CalcPointLight(point_lights[7], frag_pos, vec3(frag_normal), view_dir, material, 7, point_light_count);
+    out_color += CalcPointLight(point_lights[8], frag_pos, vec3(frag_normal), view_dir, material, 8, point_light_count);
+    out_color += CalcPointLight(point_lights[9], frag_pos, vec3(frag_normal), view_dir, material, 9, point_light_count);
+    out_color += CalcPointLight(point_lights[10], frag_pos, vec3(frag_normal), view_dir, material, 10, point_light_count);
+    out_color += CalcPointLight(point_lights[11], frag_pos, vec3(frag_normal), view_dir, material, 11, point_light_count);
+    out_color += CalcPointLight(point_lights[12], frag_pos, vec3(frag_normal), view_dir, material, 12, point_light_count);
+    out_color += CalcPointLight(point_lights[13], frag_pos, vec3(frag_normal), view_dir, material, 13, point_light_count);
+    out_color += CalcPointLight(point_lights[14], frag_pos, vec3(frag_normal), view_dir, material, 14, point_light_count);
+    out_color += CalcPointLight(point_lights[15], frag_pos, vec3(frag_normal), view_dir, material, 15, point_light_count);
 
     if (transparent == 0) {
         f_color = vec4(out_color, 1.0);

@@ -1,5 +1,6 @@
 pub mod mesh;
 use mesh::BubbleMesh;
+use super::light::{LightColor, PointLight, LightType, LightObject};
 use super::light_proxy::LightProxy;
 use super::player::Player;
 
@@ -72,7 +73,12 @@ pub struct Bubbles {
     rng: StdRng,
     mesh: BubbleMesh,
     player_id: Option<GameObjectId>,
-    light_proxy_id: Option<GameObjectId>,
+    // good bubbles data
+    good_bubbles: Vec<Bubble>,
+    good_bubbles_lights: Vec<GameObjectId>,
+    good_mesh: BubbleMesh,
+    spawn_good_frequency: f32,
+    last_good_spawn_time: f32,
 }
 
 impl Bubbles {
@@ -89,7 +95,13 @@ impl Bubbles {
             spawn_area: (glm::Vec3::new(-20.0, -5.75, -15.0), glm::Vec3::new(20.0, -3.25, -95.0)),
             mesh: BubbleMesh::new(0.4),
             player_id: None,
-            light_proxy_id: None,
+            //
+            good_bubbles: Vec::new(),
+            good_bubbles_lights: Vec::new(),
+            good_mesh: BubbleMesh::new(0.2),
+            spawn_good_frequency: 1.2,
+            last_good_spawn_time: 0.0,
+
         }
     }
 
@@ -116,23 +128,76 @@ impl Bubbles {
             self.bubble_count += 1;
             b.replace(Bubble::new(t, ctx.time.get_timestamp() as f32, self.bubble_lifetime, clr));
         });
-
     }
+
+    fn spawn_light(&mut self, position: glm::Vec3, scene: &Scene) {
+        // create light object
+        //let clr = glm::Vec3::new(0.89, 0.47, 0.705);
+        let clr = glm::Vec3::new(0.0, 1.0, 0.0);
+        let color = LightColor::new(0.5 * clr, 1.5 * clr, 2.0 * clr);
+        let point_light = PointLight::new(position, color, 1.0, 0.35, 0.44);
+        let point_light = LightType::Point(point_light);
+        let id = scene.add_gameobject(LightObject::new(point_light), 0).unwrap();
+        self.good_bubbles_lights.push(id);
+    }
+
+    fn spawn_good_bubbles(&mut self, ctx: &Context, scene: &Scene, count: usize) {
+        self.last_good_spawn_time = ctx.time.get_timestamp() as f32;
+        if self.good_bubbles.len() < 16 {
+           for _ in 0..count { 
+                let mut t = Transform::default();
+                t.rotate_euler(glm::Vec3::new(0.2, 0.1, 0.0), transform::Space::Local);
+                *t.position_mut() = Self::random_position(&self.spawn_area, &mut self.rng);
+                self.spawn_light(t.position().clone(), scene);
+                let b = Bubble::new(t, ctx.time.get_timestamp() as f32, self.bubble_lifetime, 1.0);
+                self.good_bubbles.push(b);
+            }
+        }
+    }
+
+    fn update_good_bubbles(&mut self, ctx: &Context, scene: &Scene) {
+        let mut bubbles = std::mem::take(&mut self.good_bubbles);
+        bubbles.iter_mut().for_each(|b| b.update(ctx));
+        let lights = std::mem::take(&mut self.good_bubbles_lights);
+        (self.good_bubbles, self.good_bubbles_lights) = bubbles
+                .into_iter()
+                .zip(lights.into_iter())
+                .filter(|(bubble, light)| {
+                    if let Some(l) = scene.gameobject_by_id::<LightObject>(&light) {
+                        // update bubbles coresponding light
+                        if let LightType::Point(ref mut p) = *l.light.borrow_mut() {
+                            p.position = glm::vec3_to_vec4(bubble.transform.position());
+                        }
+                        if bubble.is_dead() {
+                               l.kill(); 
+                               false
+                        } else {
+                            true
+                        }
+                    } else {
+                        true
+                    }
+                }).unzip();
+    }
+
 }
 
 impl GameObject for Bubbles {
     fn start(&mut self, ctx: &Context, scene: &Scene) -> GameResult {
         self.last_spawn_time = ctx.time.get_timestamp() as f32; 
         self.player_id = scene.get_gameobject_id("player");
-        self.light_proxy_id = scene.get_gameobject_id("light");
         Ok(())
     }
 
-    fn update(&mut self, ctx: &Context, _scene: &Scene) -> GameResult {
+    fn update(&mut self, ctx: &Context, scene: &Scene) -> GameResult {
         let time = ctx.time.get_timestamp() as f32;
         let to_spawn = (time - self.last_spawn_time) * self.spawn_frequency;
         if to_spawn >= 1.0 {
             self.spawn_bubbles(ctx, to_spawn as usize);
+        }
+        let to_spawn = (time - self.last_good_spawn_time) * self.spawn_good_frequency;
+        if to_spawn >= 1.0 {
+            self.spawn_good_bubbles(ctx, scene, to_spawn as usize);
         }
 
         self.bubbles.iter_mut().for_each(|b| {
@@ -146,7 +211,8 @@ impl GameObject for Bubbles {
             }
         });
 
-
+        self.update_good_bubbles(ctx, scene);
+        
         // input
         if ctx.input.kb.get_key_down(KeyCode::KeyT) {
             self.transparent = if self.transparent { false } else { true };
@@ -196,7 +262,24 @@ impl GameObject for Bubbles {
             camera.transform.position(),
             ctx.time.get_timestamp() as f32,
             self.bubble_count,
-            self.transparent
+            self.transparent,
+            false,
+        );
+        
+        let models = self.good_bubbles.iter_mut().flat_map(|b| {
+            b.transform.local_to_world().iter().map(|&x| x).collect::<Vec<f32>>()
+        }).collect::<Vec<f32>>();
+        let colors = self.good_bubbles.iter().map(|b| b.color_idx).collect::<Vec<f32>>();
+
+        self.good_mesh.draw(
+            &models,
+            &colors,
+            &projection,
+            camera.transform.position(),
+            ctx.time.get_timestamp() as f32,
+            self.good_bubbles.len(),
+            false,
+            true,
         );
 
         Ok(())

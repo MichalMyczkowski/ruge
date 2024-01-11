@@ -141,7 +141,8 @@ impl BubbleMesh {
         camera_pos: &glm::Vec3,
         time: f32,
         count: usize,
-        transparent: bool
+        transparent: bool,
+        good: bool,
     ) {
         self.update_buffers(mvps, colors, count);
         self.program.bind_program();
@@ -157,6 +158,10 @@ impl BubbleMesh {
             gl::Uniform1i(
                 self.program.get_uniform_location("transparent"),
                 transparent as i32,
+            );
+            gl::Uniform1i(
+                self.program.get_uniform_location("is_good"),
+                good as i32,
             );
             gl::UniformMatrix4fv( 
                 self.program.get_uniform_location("projection"),
