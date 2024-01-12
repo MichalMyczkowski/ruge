@@ -46,8 +46,9 @@ impl GameObject for Terrain {
     fn draw(&mut self, ctx: &Context, scene: &Scene) -> GameResult {
         let player = scene.gameobject_by_id::<Player>(self.player_id.as_ref().unwrap()).unwrap();
         let projection = player.active_camera().world_to_projection_matrix();
-        self.volcano_mesh.draw(projection * self.volcano_transform.local_to_world(), ctx.time.get_timestamp() as f32);
-        self.ground_mesh.draw(projection * self.ground_transform.local_to_world(), ctx.time.get_timestamp() as f32);
+        let cam_pos = player.active_camera().transform.position();
+        self.volcano_mesh.draw(cam_pos, &projection, &self.volcano_transform.local_to_world(), ctx.time.get_timestamp() as f32);
+        self.ground_mesh.draw(cam_pos, &projection, &self.ground_transform.local_to_world(), ctx.time.get_timestamp() as f32);
         Ok(())
     }
 

@@ -26,13 +26,17 @@ impl VolcanoMesh {
     }
 
     fn set_buffers(&self, volcano: primitives::SolidOfRevolution) {
-
+        
+        let buffer = volcano.verts.iter()
+            .zip(volcano.normals.iter())
+            .flat_map(|(v, n)| vec![v.x, v.y, v.z, n.x, n.y, n.z])
+            .collect::<Vec<f32>>();
         self.program.bind_buffers();
         unsafe {
             gl::BufferData(
                 gl::ARRAY_BUFFER,
-                (3 * volcano.verts.len() * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr,
-                volcano.verts.as_ptr() as *const gl::types::GLvoid,
+                (buffer.len() * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr,
+                buffer.as_ptr() as *const gl::types::GLvoid,
                 gl::STATIC_DRAW,
             );
             gl::BufferData(
@@ -49,13 +53,22 @@ impl VolcanoMesh {
                 3,
                 gl::FLOAT,
                 gl::FALSE,
-                (3 * std::mem::size_of::<f32>()) as gl::types::GLint,
+                (6 * std::mem::size_of::<f32>()) as gl::types::GLint,
                 std::ptr::null(),
+            );
+            gl::EnableVertexAttribArray(1);
+            gl::VertexAttribPointer(
+                1,
+                3,
+                gl::FLOAT,
+                gl::FALSE,
+                (6 * std::mem::size_of::<f32>()) as gl::types::GLint,
+                (3 * std::mem::size_of::<f32>()) as *const gl::types::GLvoid,
             );
         }
     }
 
-    pub fn draw(&self, mvp: glm::Mat4, time: f32) {
+    pub fn draw(&self, camera_pos: &glm::Vec3, projection: &glm::Mat4, model: &glm::Mat4, time: f32) {
         self.program.bind_program();
         self.program.bind_vao();
         self.texture.bind_texture();
@@ -69,10 +82,22 @@ impl VolcanoMesh {
                 time,
             );
             gl::UniformMatrix4fv( 
-                self.program.get_uniform_location("mvp"),
+                self.program.get_uniform_location("projection"),
                 1,
                 gl::FALSE, 
-                mvp.iter().map(|&x| x).collect::<Vec<f32>>().as_ptr() as *const f32
+                projection.iter().map(|&x| x).collect::<Vec<f32>>().as_ptr() as *const f32
+            );
+            gl::UniformMatrix4fv( 
+                self.program.get_uniform_location("model"),
+                1,
+                gl::FALSE, 
+                model.iter().map(|&x| x).collect::<Vec<f32>>().as_ptr() as *const f32
+            );
+            gl::Uniform3f(
+                self.program.get_uniform_location("viewer_pos"),
+                camera_pos.x,
+                camera_pos.y,
+                camera_pos.z
             );
             gl::DrawElements(
                 gl::TRIANGLES,

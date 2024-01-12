@@ -5,14 +5,18 @@ layout(location = 2) in vec3 normals;
 
 uniform float coord_offset;
 uniform float vert_offset;
-uniform mat4 mvp;
+uniform mat4 model;
+uniform mat4 projection;
+uniform vec3 viewer_pos;
 uniform int full;
 uniform float time;
 uniform sampler2D gradient;
-out vec4 normal;
+
+out vec3 frag_pos;
+out vec3 frag_normal;
+out vec4 cam_pos;
+
 out vec4 v_colour;
-out float texture_coord_x;
-out vec2 tc;
 
 vec3 heightmap(vec3 verti, vec2 coords) {
     float height = texture(gradient, vec2(coords.x, coords.y - time * 0.05)).x;
@@ -61,24 +65,26 @@ vec3 calculate_normal() {
         vec2(texture_coords.x, texture_coords.y - coord_offset)
     ); 
     vec3 normal = vec3(0.0);
-    normal += abs(cross(c - rt, r - rt));
-    normal += abs(cross(c - t, rt - t));
-    normal += abs(cross(c - lt, t - lt));
-    normal += abs(cross(c - l, lt - l));
-    normal += abs(cross(c - lb, l - lb));
-    normal += abs(cross(c - b, lb - b));
-    normal += abs(cross(c - rb, b - rb));
-    normal += abs(cross(c - r, rb - r));
+    normal += cross(c - rt, r - rt);
+    normal += cross(c - t, rt - t);
+    normal += cross(c - lt, t - lt);
+    normal += cross(c - l, lt - l);
+    normal += cross(c - lb, l - lb);
+    normal += cross(c - b, lb - b);
+    normal += cross(c - rb, b - rb);
+    normal += cross(c - r, rb - r);
     return normalize(normal);
 }
 
 
 void main(void) {
-   gl_Position = mvp * vec4(heightmap(vert, texture_coords), 1.0);
-   texture_coord_x = (vert.y + 2.0) / 4.0 + 0.2;
+   vec3 vp = heightmap(vert ,texture_coords);
+   gl_Position = projection * model * vec4(vp, 1.0);
    v_colour = vec4(0.6, 0.3, 0.742, 1.0);
-   tc = texture_coords;
 
-   normal = vec4(calculate_normal(), 0.0);
+   frag_pos = vec3(model * vec4(vp, 1.0));
+   frag_normal = mat3(transpose(inverse(model))) * calculate_normal();// * -1.0;  
+   //frag_normal = calculate_normal() * -1.0;  
+   cam_pos = vec4(viewer_pos, 1.0);
 }
 

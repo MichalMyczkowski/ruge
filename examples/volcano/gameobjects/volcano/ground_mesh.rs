@@ -87,7 +87,7 @@ impl GroundMesh {
         }
     }
 
-    pub fn draw(&self, mvp: glm::Mat4, time: f32) {
+    pub fn draw(&self, camera_pos: &glm::Vec3, projection: &glm::Mat4, model: &glm::Mat4, time: f32) {
         self.program.bind_program();
         self.program.bind_vao();
         self.noise.bind_texture();
@@ -109,10 +109,22 @@ impl GroundMesh {
                 1,
             );
             gl::UniformMatrix4fv( 
-                self.program.get_uniform_location("mvp"),
+                self.program.get_uniform_location("projection"),
                 1,
                 gl::FALSE, 
-                mvp.iter().map(|&x| x).collect::<Vec<f32>>().as_ptr() as *const f32
+                projection.iter().map(|&x| x).collect::<Vec<f32>>().as_ptr() as *const f32
+            );
+            gl::UniformMatrix4fv( 
+                self.program.get_uniform_location("model"),
+                1,
+                gl::FALSE, 
+                model.iter().map(|&x| x).collect::<Vec<f32>>().as_ptr() as *const f32
+            );
+            gl::Uniform3f(
+                self.program.get_uniform_location("viewer_pos"),
+                camera_pos.x,
+                camera_pos.y,
+                camera_pos.z
             );
             gl::DrawElements(
                 gl::TRIANGLES,

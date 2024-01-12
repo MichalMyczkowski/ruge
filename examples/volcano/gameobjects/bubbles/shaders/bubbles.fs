@@ -104,7 +104,6 @@ vec3 CalcSpotLight(SpotLight light, vec3 frag_pos, vec3 normal, vec3 viewDir, Ma
     return (diffuse + specular);
 } 
 
-/// - light_proxy
 #define MAX_LIGHT_COUNT 16
 layout (std140) uniform LightData {
     DirLight dir_lights[MAX_LIGHT_COUNT];
@@ -116,8 +115,66 @@ layout (std140) uniform LightData {
     int _padding;
 };
 
-/// -- shader code
+vec3 CalculateLights(vec3 frag_pos, vec3 normal, vec3 camera_pos, Material material) {
+    vec3 out_color = vec3(0.0);
+    vec3 view_dir = normalize(frag_pos - vec3(camera_pos));
+    // dynamic uniform indexing was not working so this is the solution
+    // calculate directional light
+    out_color += CalcDirLight(dir_lights[0], vec3(normal), view_dir, material, 0, dir_light_count);
+    out_color += CalcDirLight(dir_lights[1], vec3(normal), view_dir, material, 1, dir_light_count);
+    out_color += CalcDirLight(dir_lights[2], vec3(normal), view_dir, material, 2, dir_light_count);
+    out_color += CalcDirLight(dir_lights[3], vec3(normal), view_dir, material, 3, dir_light_count);
+    out_color += CalcDirLight(dir_lights[4], vec3(normal), view_dir, material, 4, dir_light_count);
+    out_color += CalcDirLight(dir_lights[5], vec3(normal), view_dir, material, 5, dir_light_count);
+    out_color += CalcDirLight(dir_lights[6], vec3(normal), view_dir, material, 6, dir_light_count);
+    out_color += CalcDirLight(dir_lights[7], vec3(normal), view_dir, material, 7, dir_light_count);
+    out_color += CalcDirLight(dir_lights[8], vec3(normal), view_dir, material, 8, dir_light_count);
+    out_color += CalcDirLight(dir_lights[9], vec3(normal), view_dir, material, 9, dir_light_count);
+    out_color += CalcDirLight(dir_lights[10], vec3(normal), view_dir, material, 10, dir_light_count);
+    out_color += CalcDirLight(dir_lights[11], vec3(normal), view_dir, material, 11, dir_light_count);
+    out_color += CalcDirLight(dir_lights[12], vec3(normal), view_dir, material, 12, dir_light_count);
+    out_color += CalcDirLight(dir_lights[13], vec3(normal), view_dir, material, 13, dir_light_count);
+    out_color += CalcDirLight(dir_lights[14], vec3(normal), view_dir, material, 14, dir_light_count);
+    out_color += CalcDirLight(dir_lights[15], vec3(normal), view_dir, material, 15, dir_light_count);
+    // calculate spot lights
+    out_color += CalcSpotLight(spot_lights[0], frag_pos, vec3(normal), view_dir, material, 0, spot_light_count);
+    out_color += CalcSpotLight(spot_lights[1], frag_pos, vec3(normal), view_dir, material, 1, spot_light_count);
+    out_color += CalcSpotLight(spot_lights[2], frag_pos, vec3(normal), view_dir, material, 2, spot_light_count);
+    out_color += CalcSpotLight(spot_lights[3], frag_pos, vec3(normal), view_dir, material, 3, spot_light_count);
+    out_color += CalcSpotLight(spot_lights[4], frag_pos, vec3(normal), view_dir, material, 4, spot_light_count);
+    out_color += CalcSpotLight(spot_lights[5], frag_pos, vec3(normal), view_dir, material, 5, spot_light_count);
+    out_color += CalcSpotLight(spot_lights[6], frag_pos, vec3(normal), view_dir, material, 6, spot_light_count);
+    out_color += CalcSpotLight(spot_lights[7], frag_pos, vec3(normal), view_dir, material, 7, spot_light_count);
+    out_color += CalcSpotLight(spot_lights[8], frag_pos, vec3(normal), view_dir, material, 8, spot_light_count);
+    out_color += CalcSpotLight(spot_lights[9], frag_pos, vec3(normal), view_dir, material, 9, spot_light_count);
+    out_color += CalcSpotLight(spot_lights[10], frag_pos, vec3(normal), view_dir, material, 10, spot_light_count);
+    out_color += CalcSpotLight(spot_lights[11], frag_pos, vec3(normal), view_dir, material, 11, spot_light_count);
+    out_color += CalcSpotLight(spot_lights[12], frag_pos, vec3(normal), view_dir, material, 12, spot_light_count);
+    out_color += CalcSpotLight(spot_lights[13], frag_pos, vec3(normal), view_dir, material, 13, spot_light_count);
+    out_color += CalcSpotLight(spot_lights[14], frag_pos, vec3(normal), view_dir, material, 14, spot_light_count);
+    out_color += CalcSpotLight(spot_lights[15], frag_pos, vec3(normal), view_dir, material, 15, spot_light_count);
+    // calculate point lights
+    out_color += CalcPointLight(point_lights[0], frag_pos, vec3(normal), view_dir, material, 0, point_light_count);
+    out_color += CalcPointLight(point_lights[1], frag_pos, vec3(normal), view_dir, material, 1, point_light_count);
+    out_color += CalcPointLight(point_lights[2], frag_pos, vec3(normal), view_dir, material, 2, point_light_count);
+    out_color += CalcPointLight(point_lights[3], frag_pos, vec3(normal), view_dir, material, 3, point_light_count);
+    out_color += CalcPointLight(point_lights[4], frag_pos, vec3(normal), view_dir, material, 4, point_light_count);
+    out_color += CalcPointLight(point_lights[5], frag_pos, vec3(normal), view_dir, material, 5, point_light_count);
+    out_color += CalcPointLight(point_lights[6], frag_pos, vec3(normal), view_dir, material, 6, point_light_count);
+    out_color += CalcPointLight(point_lights[7], frag_pos, vec3(normal), view_dir, material, 7, point_light_count);
+    out_color += CalcPointLight(point_lights[8], frag_pos, vec3(normal), view_dir, material, 8, point_light_count);
+    out_color += CalcPointLight(point_lights[9], frag_pos, vec3(normal), view_dir, material, 9, point_light_count);
+    out_color += CalcPointLight(point_lights[10], frag_pos, vec3(normal), view_dir, material, 10, point_light_count);
+    out_color += CalcPointLight(point_lights[11], frag_pos, vec3(normal), view_dir, material, 11, point_light_count);
+    out_color += CalcPointLight(point_lights[12], frag_pos, vec3(normal), view_dir, material, 12, point_light_count);
+    out_color += CalcPointLight(point_lights[13], frag_pos, vec3(normal), view_dir, material, 13, point_light_count);
+    out_color += CalcPointLight(point_lights[14], frag_pos, vec3(normal), view_dir, material, 14, point_light_count);
+    out_color += CalcPointLight(point_lights[15], frag_pos, vec3(normal), view_dir, material, 15, point_light_count);
+    return out_color;
+}
 
+
+/// -- shader code
 in float texture_coord_x;
 in vec3 frag_pos;
 in vec3 frag_normal;
@@ -149,60 +206,7 @@ void main()
         );
     }
     // calculate color
-    vec3 out_color = vec3(0.0);
-    vec3 view_dir = normalize(frag_pos - vec3(cam_pos));
-    // dynamic uniform indexing was not working so this is the solution
-    // calculate directional light
-    out_color += CalcDirLight(dir_lights[0], vec3(frag_normal), view_dir, material, 0, dir_light_count);
-    out_color += CalcDirLight(dir_lights[1], vec3(frag_normal), view_dir, material, 1, dir_light_count);
-    out_color += CalcDirLight(dir_lights[2], vec3(frag_normal), view_dir, material, 2, dir_light_count);
-    out_color += CalcDirLight(dir_lights[3], vec3(frag_normal), view_dir, material, 3, dir_light_count);
-    out_color += CalcDirLight(dir_lights[4], vec3(frag_normal), view_dir, material, 4, dir_light_count);
-    out_color += CalcDirLight(dir_lights[5], vec3(frag_normal), view_dir, material, 5, dir_light_count);
-    out_color += CalcDirLight(dir_lights[6], vec3(frag_normal), view_dir, material, 6, dir_light_count);
-    out_color += CalcDirLight(dir_lights[7], vec3(frag_normal), view_dir, material, 7, dir_light_count);
-    out_color += CalcDirLight(dir_lights[8], vec3(frag_normal), view_dir, material, 8, dir_light_count);
-    out_color += CalcDirLight(dir_lights[9], vec3(frag_normal), view_dir, material, 9, dir_light_count);
-    out_color += CalcDirLight(dir_lights[10], vec3(frag_normal), view_dir, material, 10, dir_light_count);
-    out_color += CalcDirLight(dir_lights[11], vec3(frag_normal), view_dir, material, 11, dir_light_count);
-    out_color += CalcDirLight(dir_lights[12], vec3(frag_normal), view_dir, material, 12, dir_light_count);
-    out_color += CalcDirLight(dir_lights[13], vec3(frag_normal), view_dir, material, 13, dir_light_count);
-    out_color += CalcDirLight(dir_lights[14], vec3(frag_normal), view_dir, material, 14, dir_light_count);
-    out_color += CalcDirLight(dir_lights[15], vec3(frag_normal), view_dir, material, 15, dir_light_count);
-    // calculate spot lights
-    out_color += CalcSpotLight(spot_lights[0], frag_pos, vec3(frag_normal), view_dir, material, 0, spot_light_count);
-    out_color += CalcSpotLight(spot_lights[1], frag_pos, vec3(frag_normal), view_dir, material, 1, spot_light_count);
-    out_color += CalcSpotLight(spot_lights[2], frag_pos, vec3(frag_normal), view_dir, material, 2, spot_light_count);
-    out_color += CalcSpotLight(spot_lights[3], frag_pos, vec3(frag_normal), view_dir, material, 3, spot_light_count);
-    out_color += CalcSpotLight(spot_lights[4], frag_pos, vec3(frag_normal), view_dir, material, 4, spot_light_count);
-    out_color += CalcSpotLight(spot_lights[5], frag_pos, vec3(frag_normal), view_dir, material, 5, spot_light_count);
-    out_color += CalcSpotLight(spot_lights[6], frag_pos, vec3(frag_normal), view_dir, material, 6, spot_light_count);
-    out_color += CalcSpotLight(spot_lights[7], frag_pos, vec3(frag_normal), view_dir, material, 7, spot_light_count);
-    out_color += CalcSpotLight(spot_lights[8], frag_pos, vec3(frag_normal), view_dir, material, 8, spot_light_count);
-    out_color += CalcSpotLight(spot_lights[9], frag_pos, vec3(frag_normal), view_dir, material, 9, spot_light_count);
-    out_color += CalcSpotLight(spot_lights[10], frag_pos, vec3(frag_normal), view_dir, material, 10, spot_light_count);
-    out_color += CalcSpotLight(spot_lights[11], frag_pos, vec3(frag_normal), view_dir, material, 11, spot_light_count);
-    out_color += CalcSpotLight(spot_lights[12], frag_pos, vec3(frag_normal), view_dir, material, 12, spot_light_count);
-    out_color += CalcSpotLight(spot_lights[13], frag_pos, vec3(frag_normal), view_dir, material, 13, spot_light_count);
-    out_color += CalcSpotLight(spot_lights[14], frag_pos, vec3(frag_normal), view_dir, material, 14, spot_light_count);
-    out_color += CalcSpotLight(spot_lights[15], frag_pos, vec3(frag_normal), view_dir, material, 15, spot_light_count);
-    // calculate point lights
-    out_color += CalcPointLight(point_lights[0], frag_pos, vec3(frag_normal), view_dir, material, 0, point_light_count);
-    out_color += CalcPointLight(point_lights[1], frag_pos, vec3(frag_normal), view_dir, material, 1, point_light_count);
-    out_color += CalcPointLight(point_lights[2], frag_pos, vec3(frag_normal), view_dir, material, 2, point_light_count);
-    out_color += CalcPointLight(point_lights[3], frag_pos, vec3(frag_normal), view_dir, material, 3, point_light_count);
-    out_color += CalcPointLight(point_lights[4], frag_pos, vec3(frag_normal), view_dir, material, 4, point_light_count);
-    out_color += CalcPointLight(point_lights[5], frag_pos, vec3(frag_normal), view_dir, material, 5, point_light_count);
-    out_color += CalcPointLight(point_lights[6], frag_pos, vec3(frag_normal), view_dir, material, 6, point_light_count);
-    out_color += CalcPointLight(point_lights[7], frag_pos, vec3(frag_normal), view_dir, material, 7, point_light_count);
-    out_color += CalcPointLight(point_lights[8], frag_pos, vec3(frag_normal), view_dir, material, 8, point_light_count);
-    out_color += CalcPointLight(point_lights[9], frag_pos, vec3(frag_normal), view_dir, material, 9, point_light_count);
-    out_color += CalcPointLight(point_lights[10], frag_pos, vec3(frag_normal), view_dir, material, 10, point_light_count);
-    out_color += CalcPointLight(point_lights[11], frag_pos, vec3(frag_normal), view_dir, material, 11, point_light_count);
-    out_color += CalcPointLight(point_lights[12], frag_pos, vec3(frag_normal), view_dir, material, 12, point_light_count);
-    out_color += CalcPointLight(point_lights[13], frag_pos, vec3(frag_normal), view_dir, material, 13, point_light_count);
-    out_color += CalcPointLight(point_lights[14], frag_pos, vec3(frag_normal), view_dir, material, 14, point_light_count);
-    out_color += CalcPointLight(point_lights[15], frag_pos, vec3(frag_normal), view_dir, material, 15, point_light_count);
+    vec3 out_color = CalculateLights(frag_pos, frag_normal, vec3(cam_pos), material);
 
     if (transparent == 0) {
         f_color = vec4(out_color, 1.0);
