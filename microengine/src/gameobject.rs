@@ -4,7 +4,7 @@ use crate::error::GameResult;
 use crate::Scene;
 use std::any::Any;
 
-#[derive(Hash, Clone, Copy, PartialEq, Eq)]
+#[derive(Hash, Clone, Copy, PartialEq, Eq, Debug)]
 pub struct GameObjectId {
     pub(crate) layer: usize,
     pub(crate) idx: usize,
