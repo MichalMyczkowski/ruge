@@ -41,7 +41,7 @@ impl Cube {
             glm::Vec3::new(1.0, 0.0, 0.0),
             glm::Vec3::new(1.0, 0.0, -1.0),
         ];
-        let mut normals = vec![
+        let normals = vec![
             // #1
             glm::Vec3::new(0.0, 0.0, 1.0),
             glm::Vec3::new(0.0, 0.0, 1.0),
@@ -63,15 +63,15 @@ impl Cube {
             glm::Vec3::new(-1.0, 0.0, 0.0),
             glm::Vec3::new(-1.0, 0.0, 0.0),
             // #5
-            glm::Vec3::new(0.0, -1.0, 0.0),
-            glm::Vec3::new(0.0, -1.0, 0.0),
-            glm::Vec3::new(0.0, -1.0, 0.0),
-            glm::Vec3::new(0.0, -1.0, 0.0),
+            glm::Vec3::new(0.0, 1.0, 0.0),
+            glm::Vec3::new(0.0, 1.0, 0.0),
+            glm::Vec3::new(0.0, 1.0, 0.0),
+            glm::Vec3::new(0.0, 1.0, 0.0),
             // #6
-            glm::Vec3::new(0.0, 1.0, 0.0),
-            glm::Vec3::new(0.0, 1.0, 0.0),
-            glm::Vec3::new(0.0, 1.0, 0.0),
-            glm::Vec3::new(0.0, 1.0, 0.0),
+            glm::Vec3::new(0.0, -1.0, 0.0),
+            glm::Vec3::new(0.0, -1.0, 0.0),
+            glm::Vec3::new(0.0, -1.0, 0.0),
+            glm::Vec3::new(0.0, -1.0, 0.0),
         ];
         verts.iter_mut().for_each(|v| {
             v.x -= 0.5;
