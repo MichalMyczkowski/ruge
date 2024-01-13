@@ -210,11 +210,17 @@ impl GameObject for Player {
         if let CameraType::FirstPerson = CameraType::from(self.camera_index) {
             Ok(())
         } else {
+            let body = self.transform.local_to_world();
+            let tail = self.tail_transform.local_to_world();
+            let blade1 = self.blade1_transform.local_to_world();
+            let blade2 = self.blade2_transform.local_to_world();
             self.mesh.draw(
-                self.active_camera().world_to_projection_matrix() * self.transform.local_to_world(),
-                &self.tail_transform.local_to_world(),
-                &self.blade1_transform.local_to_world(),
-                &self.blade2_transform.local_to_world(),
+                self.active_camera().transform.position(),
+                &self.active_camera().world_to_projection_matrix(),
+                &body,
+                &tail,
+                &blade1,
+                &blade2,
                 ctx.time.get_timestamp() as f32
             );
             Ok(()) 

@@ -52,6 +52,7 @@ impl Bubble {
             self.is_dead = true;
         } else {
             self.transform.position_mut().y += self.speed * ctx.time.delta_time() as f32;
+            self.transform.position_mut().z += 2.0 * self.speed * ctx.time.delta_time() as f32;
             self.transform.scale_mut().x += 0.15 * ctx.time.delta_time() as f32;
             self.transform.scale_mut().y += 0.15 * ctx.time.delta_time() as f32;
             self.transform.scale_mut().z += 0.15 * ctx.time.delta_time() as f32;
@@ -88,11 +89,11 @@ impl Bubbles {
             bubble_count: 0,
             transparent: true,
             max_bubbles,
-            bubble_lifetime: 8.0,
+            bubble_lifetime: 10.0,
             last_spawn_time: 0.0,
             spawn_frequency,
             rng: string_to_rng(seed.into()),
-            spawn_area: (glm::Vec3::new(-20.0, -5.75, -15.0), glm::Vec3::new(20.0, -3.25, -95.0)),
+            spawn_area: (glm::Vec3::new(-20.0, -7.75, -15.0), glm::Vec3::new(20.0, -6.25, -95.0)),
             mesh: BubbleMesh::new(0.4),
             player_id: None,
             //

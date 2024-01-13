@@ -67,7 +67,7 @@ impl CameraObject for FirstPersonCam {
         if is_active {
             let offset_x = ctx.input.mouse.position_delta.0 * -1.0;
             let offset_y = ctx.input.mouse.position_delta.1 * -1.0;
-            self.camera.transform.rotate(glm::Vec3::y(), offset_x * self.sensitivity * ctx.time.delta_time() as f32, Space::Local);
+            self.camera.transform.rotate(glm::Vec3::y(), offset_x * self.sensitivity * ctx.time.delta_time() as f32, Space::World);
             self.camera.transform.rotate(glm::Vec3::x(), offset_y * self.sensitivity * ctx.time.delta_time() as f32, Space::Local);
             *self.camera.transform.position_mut() = *player_transform.position();
         }
@@ -182,21 +182,13 @@ impl CameraObject for ThirdPersonCam {
         let right = self.camera.transform.vector_to_world(&glm::Vec3::x());
 
         if offset_x != 0.0 || offset_y != 0.0 {
-            //let new_pos = *self.camera.transform.position() + self.sensitivity * (offset_y * up + offset_x * right);
             let new_pos = self.from_player + self.sensitivity * (offset_y * up + offset_x * right);
-            // vector from player to new position
-            //let new_pos = new_pos - *player_transform.position();
-            // vector from player to old position
-            //let old_pos = *self.camera.transform.position() - *player_transform.position();
-
             let rot_axis = glm::cross(
-                //&old_pos,
                 &self.from_player,
                 &new_pos
             );
 
             let angle = glm::angle(
-                //&old_pos,
                 &self.from_player,
                 &new_pos
             );
@@ -208,13 +200,5 @@ impl CameraObject for ThirdPersonCam {
         // Apply new camera position
         *self.camera.transform.position_mut() = *player_transform.position() + self.from_player;
 
-
-
-        /*
-        let offset_x = ctx.input.mouse.position_delta.0 * -1.0;
-        let offset_y = ctx.input.mouse.position_delta.1 * -1.0;
-        self.camera.transform.rotate(glm::Vec3::y(), offset_x * self.sensitivity * ctx.time.delta_time() as f32, Space::Local);
-        self.camera.transform.rotate(glm::Vec3::x(), offset_y * self.sensitivity * ctx.time.delta_time() as f32, Space::Local);
-        */
     }
 }

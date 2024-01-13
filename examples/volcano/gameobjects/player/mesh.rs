@@ -27,7 +27,11 @@ impl PlayerMesh {
 
     fn set_buffers(&self, cube: primitives::Cube) {
         self.program.bind_buffers();
-        let buffer = cube.verts.iter().zip(cube.texture_coordinates).flat_map(|(v, t)| vec![v.x, v.y, v.z, t.x, t.y]).collect::<Vec<f32>>();
+        let buffer = cube.verts.iter()
+            .zip(cube.texture_coordinates)
+            .zip(cube.normals)
+            .flat_map(|((v, t), n)| vec![v.x, v.y, v.z, t.x, t.y, n.x, n.y, n.z])
+            .collect::<Vec<f32>>();
         unsafe {
             gl::BufferData(
                 gl::ARRAY_BUFFER,
@@ -48,7 +52,7 @@ impl PlayerMesh {
                 3,
                 gl::FLOAT,
                 gl::FALSE,
-                (5 * std::mem::size_of::<f32>()) as gl::types::GLint,
+                (8 * std::mem::size_of::<f32>()) as gl::types::GLint,
                 std::ptr::null(),
             );
             // texture coordinates
@@ -58,13 +62,23 @@ impl PlayerMesh {
                 2,
                 gl::FLOAT,
                 gl::FALSE,
-                (5 * std::mem::size_of::<f32>()) as gl::types::GLint,
+                (8 * std::mem::size_of::<f32>()) as gl::types::GLint,
                 (3 * std::mem::size_of::<f32>()) as *const gl::types::GLvoid,
+            );
+            // texture coordinates
+            gl::EnableVertexAttribArray(2);
+            gl::VertexAttribPointer(
+                2,
+                3,
+                gl::FLOAT,
+                gl::FALSE,
+                (8 * std::mem::size_of::<f32>()) as gl::types::GLint,
+                (5 * std::mem::size_of::<f32>()) as *const gl::types::GLvoid,
             );
         }
     }
 
-    pub fn draw(&self, mvp: glm::Mat4, tail_model: &glm::Mat4, blade1: &glm::Mat4, blade2: &glm::Mat4, time: f32) {
+    pub fn draw(&self, camera_pos: &glm::Vec3, projection: &glm::Mat4, model: &glm::Mat4, tail_model: &glm::Mat4, blade1: &glm::Mat4, blade2: &glm::Mat4, time: f32) {
         self.program.bind_program();
         self.program.bind_vao();
         self.texture.bind_texture();
@@ -77,10 +91,22 @@ impl PlayerMesh {
                 time,
             );
             gl::UniformMatrix4fv( 
-                self.program.get_uniform_location("mvp"),
+                self.program.get_uniform_location("projection"),
                 1,
                 gl::FALSE, 
-                mvp.iter().map(|&x| x).collect::<Vec<f32>>().as_ptr() as *const f32
+                projection.iter().map(|&x| x).collect::<Vec<f32>>().as_ptr() as *const f32
+            );
+            gl::UniformMatrix4fv( 
+                self.program.get_uniform_location("model"),
+                1,
+                gl::FALSE, 
+                model.iter().map(|&x| x).collect::<Vec<f32>>().as_ptr() as *const f32
+            );
+            gl::Uniform3f(
+                self.program.get_uniform_location("viewer_pos"),
+                camera_pos.x,
+                camera_pos.y,
+                camera_pos.z
             );
             gl::UniformMatrix4fv( 
                 self.program.get_uniform_location("tail_model"),
