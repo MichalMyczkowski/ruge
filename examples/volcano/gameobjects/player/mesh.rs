@@ -78,7 +78,7 @@ impl PlayerMesh {
         }
     }
 
-    pub fn draw(&self, camera_pos: &glm::Vec3, projection: &glm::Mat4, model: &glm::Mat4, tail_model: &glm::Mat4, blade1: &glm::Mat4, blade2: &glm::Mat4, time: f32) {
+    pub fn draw(&self, camera_pos: &glm::Vec3, projection: &glm::Mat4, model: &glm::Mat4, tail_model: &glm::Mat4, blade1: &glm::Mat4, blade2: &glm::Mat4, time: f32, damage: f32) {
         self.program.bind_program();
         self.program.bind_vao();
         self.texture.bind_texture();
@@ -89,6 +89,10 @@ impl PlayerMesh {
             gl::Uniform1f(
                 self.program.get_uniform_location("time"),
                 time,
+            );
+            gl::Uniform1f(
+                self.program.get_uniform_location("damage"),
+                damage,
             );
             gl::UniformMatrix4fv( 
                 self.program.get_uniform_location("projection"),

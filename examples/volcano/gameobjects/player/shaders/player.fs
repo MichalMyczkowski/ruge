@@ -180,10 +180,14 @@ in vec4 cam_pos;
 
 in vec2 t_coords;
 uniform sampler2D gradient;
+uniform float damage;
+uniform float time;
 out vec4 out_color;
 
 void main(void) {
-    vec3 diffuse_clr = vec3(texture(gradient, t_coords));
+    vec3 dmg_clr = vec3(1.0, 0.0, 0.0);
+    float dmg = damage * abs(sin(time));
+    vec3 diffuse_clr = mix(vec3(texture(gradient, t_coords)), dmg_clr, dmg);
     Material material = Material(
         diffuse_clr,
         diffuse_clr,

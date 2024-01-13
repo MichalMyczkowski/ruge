@@ -148,7 +148,7 @@ impl ThirdPersonCam {
     pub fn new(width: f32, height: f32, sensitivity: f32, radius: f32, player_transform: &transform::Transform) -> Self {
         let mut camera = Camera::new(
             ProjectionType::Perspective { fov: 45.0 },
-            2.0,
+            0.6,
             1000.0, 
             width, 
             height

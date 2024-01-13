@@ -10,6 +10,7 @@ use microengine::components::{
     transform::Transform
 };
 
+use super::bubbles::{Bubbles, CollisionType};
 use super::light::{LightColor, SpotLight, LightType, LightObject};
 
 pub struct Player {
@@ -26,8 +27,13 @@ pub struct Player {
     acceleration: f32,
     friction: f32,
     max_speed: f32,
-    // light
+    // other gameobjects
     light_id: Option<GameObjectId>,
+    bubbles_id: Option<GameObjectId>,
+    // damage and points
+    points: u32,
+    damage: f32,
+
     
 }
 
@@ -67,6 +73,9 @@ impl Player {
             friction: 0.95,
             max_speed: 7.0,
             light_id: None,
+            bubbles_id: None,
+            damage: 0.0,
+            points: 0,
         }
     }
 
@@ -166,11 +175,52 @@ impl GameObject for Player {
         let spot_light = SpotLight::new(*self.transform.position(), -1.0 * glm::Vec3::z(), color, 0.99, 0.97);
         let spot_light = LightType::Spot(spot_light);
         self.light_id = Some(scene.add_gameobject(LightObject::new(spot_light), 0).unwrap()); 
+        let bubbles_id = scene.get_gameobject_id("bubbles").unwrap();
+        self.bubbles_id= Some(bubbles_id);
         Ok(())
     }
 
-    fn fixed_update(&mut self, _ctx: &Context, _scene: &Scene) -> GameResult {
+    fn fixed_update(&mut self, _ctx: &Context, scene: &Scene) -> GameResult {
         *self.transform.position_mut() = self.transform.position() + self.speed;
+        if let Some(ref id) = self.bubbles_id {
+            let bubbles = scene.gameobject_by_id::<Bubbles>(id).unwrap();
+            
+            let body_aa = 
+                glm::vec4_to_vec3(
+                    &(self.transform.local_to_world() *
+                    glm::Vec4::new(0.0, 0.0, 0.0, 1.0))
+                );
+            let body_bb = 
+                glm::vec4_to_vec3(
+                    &(self.transform.local_to_world() *
+                    glm::Vec4::new(0.0, 0.0, -1.0, 1.0))
+                );
+
+            let tail_aa = 
+                glm::vec4_to_vec3(
+                    &(self.transform.local_to_world() * self.tail_transform.local_to_world() *
+                    glm::Vec4::new(0.0, 0.0, 0.0, 1.0))
+                );
+            let tail_bb = 
+                glm::vec4_to_vec3(
+                    &(self.transform.local_to_world() * self.tail_transform.local_to_world() *
+                    glm::Vec4::new(0.0, 0.0, -1.0, 1.0))
+                );
+
+
+            let collision = bubbles.check_collisions(&body_aa, &body_bb, &tail_aa, &tail_bb);
+            match collision {
+                CollisionType::Good(points) => { 
+                    self.points += points;
+                    println!("got points: {points}");
+                },
+                CollisionType::Bad(damage) => {
+                    self.damage += damage;
+                    println!("got damage: {damage}");
+                },
+                CollisionType::None => (),
+            }
+        }
         Ok(())
     }
 
@@ -221,7 +271,8 @@ impl GameObject for Player {
                 &tail,
                 &blade1,
                 &blade2,
-                ctx.time.get_timestamp() as f32
+                ctx.time.get_timestamp() as f32,
+                self.damage,
             );
             Ok(()) 
         }

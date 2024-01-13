@@ -4,6 +4,7 @@ use super::light::{LightColor, PointLight, LightType, LightObject};
 use super::light_proxy::LightProxy;
 use super::player::Player;
 
+use std::cell::RefCell;
 use std::iter;
 
 use rand::{
@@ -14,13 +15,19 @@ use crate::utils::string_to_rng;
 use microengine::prelude::*;
 use microengine::components::transform::{*, self};
 
+pub enum CollisionType {
+    None,
+    Good(u32),
+    Bad(f32),
+}
+
 
 pub struct Bubble {
     transform: Transform,
     start_time: f32,
     max_time: f32,
     speed: f32,
-    is_dead: bool,
+    is_dead: RefCell<bool>,
     /// x position in color texture
     color_idx: f32,
     distance_to_camera: f32,
@@ -35,7 +42,7 @@ impl Bubble {
             max_time,
             speed: 1.0,
             color_idx,
-            is_dead: false,
+            is_dead: RefCell::new(false),
             distance_to_camera: 0.0,
         }
     }
@@ -45,17 +52,45 @@ impl Bubble {
     }
 
     pub fn is_dead(&self) -> bool {
-        self.is_dead
+        *self.is_dead.borrow()
     }
     pub fn update(&mut self, ctx: &Context) {
         if self.max_time < ctx.time.get_timestamp() as f32 - self.start_time {
-            self.is_dead = true;
+            *self.is_dead.borrow_mut() = true;
         } else {
             self.transform.position_mut().y += self.speed * ctx.time.delta_time() as f32;
             self.transform.position_mut().z += 2.0 * self.speed * ctx.time.delta_time() as f32;
             self.transform.scale_mut().x += 0.15 * ctx.time.delta_time() as f32;
             self.transform.scale_mut().y += 0.15 * ctx.time.delta_time() as f32;
             self.transform.scale_mut().z += 0.15 * ctx.time.delta_time() as f32;
+        }
+    }
+    pub fn collide(
+        &self,
+        aa: &glm::Vec3,
+        bb: &glm::Vec3,
+        ) -> bool {
+       
+        let inv_model = glm::inverse(&self.transform.calculate_local_to_world_matrix());
+        let aa = glm::vec4_to_vec3(&(inv_model * glm::Vec4::new(aa.x, aa.y, aa.z, 1.0)));
+        let bb = glm::vec4_to_vec3(&(inv_model * glm::Vec4::new(bb.x, bb.y, bb.z, 1.0)));
+        let position = glm::Vec3::new(0.0, 0.0, 0.0);
+        let radius = self.transform.scale().x;
+
+        let closest_point = glm::Vec3::new(
+            f32::max(aa.x, f32::min(position.x, bb.x)),
+            f32::max(aa.y, f32::min(position.y, bb.y)),
+            f32::max(aa.z, f32::min(position.z, bb.z)),
+            );
+        let sq_distance =
+            (closest_point.x - position.x).powi(2) +
+            (closest_point.y - position.y).powi(2) +
+            (closest_point.z - position.z).powi(2);
+        if sq_distance <= radius.powi(2) {
+            *self.is_dead.borrow_mut() = true;
+            true
+        } else {
+            false
         }
     }
 }
@@ -156,6 +191,18 @@ impl Bubbles {
         }
     }
 
+    fn update_bubbles(&mut self, ctx: &Context) {
+        self.bubbles.iter_mut().for_each(|b| {
+            if let Some(bubble) = b {
+                bubble.update(ctx);
+                if bubble.is_dead() {
+                    self.bubble_count -= 1;
+                    *b = None;
+                }
+            }
+        });
+    }
+
     fn update_good_bubbles(&mut self, ctx: &Context, scene: &Scene) {
         let mut bubbles = std::mem::take(&mut self.good_bubbles);
         bubbles.iter_mut().for_each(|b| b.update(ctx));
@@ -181,9 +228,54 @@ impl Bubbles {
                 }).unzip();
     }
 
+    pub fn check_collisions(
+        &self,
+        body_aa: &glm::Vec3,
+        body_bb: &glm::Vec3,
+        tail_aa: &glm::Vec3,
+        tail_bb: &glm::Vec3,
+        ) -> CollisionType {
+
+        let points = self.good_bubbles.iter().map(|b| {
+            if b.collide(body_aa, body_bb) ||
+                b.collide(tail_aa, tail_bb) {
+                1
+            } else {
+                0
+            }
+        }).sum();
+
+        if points > 0 {
+            return CollisionType::Good(points);
+        }
+        
+        let empty = self.max_bubbles - self.bubble_count;
+        let damage = self.bubbles.iter().rev().skip(empty).take(5).map(|b| {
+            if let Some(ref b) = b {
+                if b.collide(body_aa, body_bb) ||
+                    b.collide(body_aa, body_bb) {
+                    0.1
+                } else {
+                    0.0
+                }
+            } else {
+                0.0
+            }
+        }).sum();
+        if damage > 0.0 {
+            return CollisionType::Bad(damage);
+        }
+
+        CollisionType::None
+    }
+
 }
 
 impl GameObject for Bubbles {
+    fn name(&self) -> &str {
+        "bubbles"
+    }
+
     fn start(&mut self, ctx: &Context, scene: &Scene) -> GameResult {
         self.last_spawn_time = ctx.time.get_timestamp() as f32; 
         self.player_id = scene.get_gameobject_id("player");
@@ -201,17 +293,7 @@ impl GameObject for Bubbles {
             self.spawn_good_bubbles(ctx, scene, to_spawn as usize);
         }
 
-        self.bubbles.iter_mut().for_each(|b| {
-            if let Some(bubble) = b {
-                bubble.update(ctx);
-                if bubble.is_dead() {
-                    self.bubble_count -= 1;
-                    // TODO: do something fancy on death
-                    *b = None;
-                }
-            }
-        });
-
+        self.update_bubbles(ctx);
         self.update_good_bubbles(ctx, scene);
         
         // input
