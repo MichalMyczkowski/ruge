@@ -12,6 +12,7 @@ use microengine::components::{
 
 use super::bubbles::{Bubbles, CollisionType};
 use super::light::{LightColor, SpotLight, LightType, LightObject};
+use super::volcano::{Terrain, self};
 
 pub struct Player {
     pub transform: Transform,
@@ -21,7 +22,6 @@ pub struct Player {
     mesh: PlayerMesh,
     cameras: Vec<Box<dyn CameraObject>>,
     camera_index: usize,
-    reached_goal: bool,
     // moving
     speed: glm::Vec3,
     acceleration: f32,
@@ -29,16 +29,18 @@ pub struct Player {
     max_speed: f32,
     // other gameobjects
     light_id: Option<GameObjectId>,
+    volcano_id: Option<GameObjectId>,
     bubbles_id: Option<GameObjectId>,
     // damage and points
+    max_health: f32,
+    health: f32,
     points: u32,
-    damage: f32,
-
-    
+    pub is_dead: bool,
+    pub has_won: bool,
 }
 
 impl Player {
-    pub fn new() -> Self {
+    pub fn new(health: f32) -> Self {
         let mut tail_transform = Transform::new(
             glm::Vec3::new(0.0, 0.25, 1.0),
             glm::Vec3::new(0.0, 0.0, 0.0),
@@ -68,23 +70,22 @@ impl Player {
             cameras: Vec::with_capacity(3),
             camera_index: 0,
             speed: glm::Vec3::zeros(),
-            reached_goal: false,
             acceleration: 0.8,
             friction: 0.95,
             max_speed: 7.0,
             light_id: None,
+            volcano_id: None,
             bubbles_id: None,
-            damage: 0.0,
+            health,
+            max_health: health,
             points: 0,
+            is_dead: false,
+            has_won: false,
         }
     }
 
     pub fn active_camera(&self) -> &Camera {
         self.cameras[self.camera_index].get_camera()
-    }
-
-    pub fn reached_goal(&self) -> bool {
-        self.reached_goal
     }
 
     fn next_camera(&mut self) {
@@ -177,14 +178,14 @@ impl GameObject for Player {
         self.light_id = Some(scene.add_gameobject(LightObject::new(spot_light), 0).unwrap()); 
         let bubbles_id = scene.get_gameobject_id("bubbles").unwrap();
         self.bubbles_id= Some(bubbles_id);
+        let volcano_id = scene.get_gameobject_id("volcano").unwrap();
+        self.volcano_id= Some(volcano_id);
         Ok(())
     }
 
     fn fixed_update(&mut self, _ctx: &Context, scene: &Scene) -> GameResult {
-        *self.transform.position_mut() = self.transform.position() + self.speed;
         if let Some(ref id) = self.bubbles_id {
             let bubbles = scene.gameobject_by_id::<Bubbles>(id).unwrap();
-            
             let body_aa = 
                 glm::vec4_to_vec3(
                     &(self.transform.local_to_world() *
@@ -206,21 +207,42 @@ impl GameObject for Player {
                     &(self.transform.local_to_world() * self.tail_transform.local_to_world() *
                     glm::Vec4::new(0.0, 0.0, -1.0, 1.0))
                 );
-
-
             let collision = bubbles.check_collisions(&body_aa, &body_bb, &tail_aa, &tail_bb);
             match collision {
                 CollisionType::Good(points) => { 
                     self.points += points;
-                    println!("got points: {points}");
                 },
                 CollisionType::Bad(damage) => {
-                    self.damage += damage;
-                    println!("got damage: {damage}");
+                    self.health -= damage;
+                    if self.health <= 0.0 {
+                        self.is_dead = true;
+                    }
                 },
                 CollisionType::None => (),
             }
         }
+        let mut new_pos = self.transform.position() + self.speed;
+        if let Some(ref id) = self.volcano_id {
+            let volcano = scene.gameobject_by_id::<Terrain>(id).unwrap();
+            let collide = volcano.collide(&new_pos);
+            match collide {
+                volcano::CollisionType::Ground => {
+                    self.speed.y = 0.1;
+                    new_pos = self.transform.position() + self.speed;
+                },
+                volcano::CollisionType::Volcano => {
+                    new_pos = *self.transform.position();
+                    self.speed = glm::Vec3::zeros();
+                }
+                volcano::CollisionType::Won => {
+                    if self.points > 16 {
+                        self.has_won = true;
+                    }
+                },
+                _ => (),
+            }
+        }
+        *self.transform.position_mut() = new_pos;
         Ok(())
     }
 
@@ -272,7 +294,7 @@ impl GameObject for Player {
                 &blade1,
                 &blade2,
                 ctx.time.get_timestamp() as f32,
-                self.damage,
+                (self.max_health - self.health) / self.max_health,
             );
             Ok(()) 
         }

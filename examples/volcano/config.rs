@@ -11,7 +11,7 @@ pub fn debug() -> bool {
 }
 
 /// Fifth task during Computer Graphics course.
-/// Fly helicopter into center of a volcano and avoid getting hit by evil bubbles.
+/// Collect 16 green glowing bubbles and reach the center of the volcano.
 /// CONTROLS:
 /// W,S,A,D -> player movement,
 /// Mouse -> camera movement,

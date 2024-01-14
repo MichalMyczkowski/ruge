@@ -115,10 +115,11 @@ pub struct Bubbles {
     good_mesh: BubbleMesh,
     spawn_good_frequency: f32,
     last_good_spawn_time: f32,
+    damage: f32,
 }
 
 impl Bubbles {
-    pub fn new(max_bubbles: usize, spawn_frequency: f32, seed: &str) -> Self {
+    pub fn new(max_bubbles: usize, spawn_frequency: f32, damage: f32, seed: &str) -> Self {
         Self {
             bubbles: iter::repeat_with(|| None).take(max_bubbles).collect(),
             bubble_count: 0,
@@ -137,6 +138,7 @@ impl Bubbles {
             good_mesh: BubbleMesh::new(0.2),
             spawn_good_frequency: 1.2,
             last_good_spawn_time: 0.0,
+            damage: 0.1,
 
         }
     }
@@ -254,7 +256,7 @@ impl Bubbles {
             if let Some(ref b) = b {
                 if b.collide(body_aa, body_bb) ||
                     b.collide(body_aa, body_bb) {
-                    0.1
+                    self.damage
                 } else {
                     0.0
                 }

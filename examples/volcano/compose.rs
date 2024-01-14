@@ -23,12 +23,12 @@ fn create_scene(config: VolcanoConfig, name: &str) -> Scene {
 
 
 fn add_player(scene: &mut Scene) {
-    let player = Player::new();
+    let player = Player::new(1.0);
     _ = scene.add_gameobject(player, 1).unwrap()
 }
 
 fn add_bubbles(scene: &mut Scene) {
-    let bubbles = Bubbles::new(700, 20.0, "asdads");
+    let bubbles = Bubbles::new(700, 20.0, 0.1, "asdads");
     _ = scene.add_gameobject(bubbles, 2).unwrap()
 }
 

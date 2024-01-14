@@ -37,8 +37,12 @@ impl GameObject for Axis {
     
     fn update(&mut self, ctx: &Context, scene: &Scene) -> GameResult {
         let player = scene.gameobject_by_id::<Player>(self.player_id.as_ref().unwrap()).unwrap();
-        if player.reached_goal() {
+        if player.has_won {
             println!("Reached end in: {}s", ctx.time.get_timestamp() - self.start_time);
+            ctx.window.close();
+        }
+        if player.is_dead {
+            println!("You died");
             ctx.window.close();
         }
         if ctx.input.kb.get_key_down(KeyCode::KeyEscape) {
@@ -55,9 +59,11 @@ impl GameObject for Axis {
     }
 
     fn draw(&mut self, ctx: &Context, scene: &Scene) -> GameResult {
-        let player = scene.gameobject_by_id::<Player>(self.player_id.as_ref().unwrap()).unwrap();
-        let mvp = player.active_camera().world_to_projection_matrix() * self.transform.local_to_world();
-        self.mesh.draw(mvp, ctx.time.get_timestamp() as f32);
+        if debug() {
+            let player = scene.gameobject_by_id::<Player>(self.player_id.as_ref().unwrap()).unwrap();
+            let mvp = player.active_camera().world_to_projection_matrix() * self.transform.local_to_world();
+            self.mesh.draw(mvp, ctx.time.get_timestamp() as f32);
+        }
         Ok(())
     }
 

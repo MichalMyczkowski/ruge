@@ -6,11 +6,21 @@ use super::player::Player;
 use microengine::components::transform::Transform;
 use microengine::prelude::*;
 
+pub enum CollisionType {
+    Ground,
+    Volcano,
+    Won,
+    None,
+}
+
+
 pub struct Terrain {
     pub volcano_transform: Transform,
     pub ground_transform: Transform,
     volcano_mesh: VolcanoMesh,
+    volcano_max_y: f32,
     ground_mesh: GroundMesh,
+    ground_level: f32,
     player_id: Option<GameObjectId>,
 }
 
@@ -29,14 +39,48 @@ impl Terrain {
         Self {
             volcano_transform,
             volcano_mesh: VolcanoMesh::new(),
+            volcano_max_y: 6.0,
             ground_transform,
             ground_mesh: GroundMesh::new(),
+            ground_level: -5.0,
             player_id: None,
         }
+    }
+
+    pub fn collide(&self, position: &glm::Vec3) -> CollisionType {
+        // check if is below ground level
+        if position.y < self.ground_level {
+            return CollisionType::Ground;
+        }
+
+        if position.y > self.volcano_max_y {
+            return CollisionType::None; 
+        }
+        
+        let center = self.volcano_transform.position();
+        let outer_radius = 1.41 * self.volcano_transform.scale().x;
+        let inner_radius = 1.0 * self.volcano_transform.scale().x;
+        // if player is outside
+        let distance = glm::distance(
+            &glm::Vec2::new(position.x, position.z),
+            &glm::Vec2::new(center.x, center.z)
+        );
+
+        if distance > inner_radius {
+            if distance <= outer_radius {
+                return CollisionType::Volcano;
+            } else {
+                return CollisionType::None;
+            }
+        }
+        CollisionType::Won
     }
 }
 
 impl GameObject for Terrain {
+    fn name(&self) -> &str {
+        "volcano"
+    }
     fn start(&mut self, _ctx: &Context, scene: &Scene) -> GameResult {
         let player_id = scene.get_gameobject_id("player").unwrap();
         self.player_id = Some(player_id);
