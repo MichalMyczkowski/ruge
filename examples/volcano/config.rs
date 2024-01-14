@@ -30,7 +30,6 @@ pub struct VolcanoConfig {
 pub fn volcano_config() -> VolcanoConfig {
     let c = VolcanoConfig::parse();
     unsafe {
-        //gl::Enable(gl::CULL_FACE); 
         DEBUG = c.debug;
     }
     c

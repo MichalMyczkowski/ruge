@@ -4,6 +4,7 @@ mod mesh;
 use crate::config::debug;
 use mesh::PlayerMesh;
 use cameras::*;
+use microengine::components::transform::Space;
 use microengine::prelude::*;
 use microengine::components::{
     camera::Camera,
@@ -100,6 +101,7 @@ impl Player {
         let v_back = v_front * -1.0;
         let v_left = v_right * -1.0;
 
+
         let mut front = glm::Vec3::zeros();
         let mut right = glm::Vec3::zeros();
         let mut back = glm::Vec3::zeros();
@@ -125,6 +127,28 @@ impl Player {
         self.speed *= self.friction;
         if self.speed.magnitude() <= 0.0005 {
             self.speed = glm::Vec3::zeros();
+        }
+
+        // rotate player
+        let player_front = self.transform.vector_to_world(&(glm::Vec3::z() * -1.0));
+        if glm::magnitude(&self.speed) > 0.0 {
+            let mut angle = glm::dot(
+                &glm::normalize(&glm::Vec3::new(player_front.x, 0.0, player_front.z)),
+                &glm::normalize(&glm::Vec3::new(v_front.x, 0.0, v_front.z)),
+            );
+            let cross = glm::cross(
+                &glm::normalize(&glm::Vec3::new(player_front.x, 0.0, player_front.z)),
+                &glm::normalize(&glm::Vec3::new(v_front.x, 0.0, v_front.z)),
+            );
+            let dot = glm::dot(
+                &cross,
+                &glm::Vec3::y(),
+            );
+            angle = angle.acos();
+            if angle.is_finite() {
+                angle = if dot < 0.0 { -angle } else { angle };
+                self.transform.rotate(glm::Vec3::y(), angle * ctx.time.delta_time() as f32, Space::World);
+            }
         }
     }
 
@@ -156,7 +180,7 @@ impl GameObject for Player {
                 SideViewCam::new(
                     ctx.window.width() as f32,
                     ctx.window.height() as f32,
-                    3.0,
+                    120.0,
                 )
             ),
         );
@@ -211,9 +235,11 @@ impl GameObject for Player {
             match collision {
                 CollisionType::Good(points) => { 
                     self.points += points;
+                    println!("points total: {}", self.points);
                 },
                 CollisionType::Bad(damage) => {
                     self.health -= damage;
+                    println!("took damage: {damage}, current health: {}", self.health);
                     if self.health <= 0.0 {
                         self.is_dead = true;
                     }
