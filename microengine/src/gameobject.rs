@@ -7,8 +7,8 @@ use std::any::Any;
 #[derive(Hash, Clone, Copy, PartialEq, Eq, Debug)]
 pub struct GameObjectId {
     pub(crate) layer: usize,
-    pub(crate) idx: usize,
     pub(crate) id: usize,
+    pub(crate) is_dead: bool,
 }
 
 pub trait GameObject {

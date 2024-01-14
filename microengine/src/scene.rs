@@ -113,7 +113,12 @@ impl Scene {
                     }
                 };
                 f(id, &mut go, &self)?;
-                self.gameobjects[layer].insert(id.id, Some(go));
+                if !go.is_dead() {
+                    self.gameobjects[layer].insert(id.id, Some(go));
+                } else {
+                    self.id_manager.borrow_mut().free(id);
+                    self.gameobject_ids[layer][it].is_dead = true;
+                }
             }
         }
         Ok(())
@@ -123,7 +128,7 @@ impl Scene {
     /// returns true if all gameobjects are finished.
     pub fn run_loop(&mut self, ctx: &mut Context) -> GameResult {
         // add newly created gameobjects
-        for (mut id, mut go) in self.new_gameobjects.borrow_mut().drain(..) {
+        for (id, mut go) in self.new_gameobjects.borrow_mut().drain(..) {
             if id.layer >= self.layers {
                 return Err(
                     GameError::SceneError(self.name.clone(),
@@ -135,7 +140,6 @@ impl Scene {
                     )
                 );
             }
-            id.idx = self.gameobject_ids[id.layer].len();
             go.on_add(&ctx, &self, id)?;
             self.gameobject_ids[id.layer].push(id);
             self.gameobjects[id.layer].insert(id.id, Some(go));
@@ -152,28 +156,16 @@ impl Scene {
         }
 
         // run update
-        let mut dead_ids: Vec<GameObjectId> = Vec::new();
-        self.for_all_gameobjects(|id, go, scene| {
+        self.for_all_gameobjects(|_, go, scene| {
             go.update(&ctx, scene)?;
-            if go.is_dead() {
-                dead_ids.push(id);
-            }
             Ok(())
         })?;
 
         // delete all dead gameobjects
-        for id in dead_ids.into_iter() {
-            // TODO TEST IF IT WORKS PROPERLY SOMEHOW
-            if self.gameobject_ids[id.layer].len() > 1 {
-                // swap_remove but updating idx of the swapped element
-                let last_idx = self.gameobject_ids[id.layer].len() - 1;
-                self.gameobject_ids[id.layer].swap(id.idx, last_idx);
-                self.gameobject_ids[id.layer][id.idx].idx = id.idx;
-            }
-            self.gameobject_ids[id.layer].pop();
-            self.gameobjects[id.layer].remove(&id.id);
-            self.id_manager.borrow_mut().free(id);
-        }
+        self.gameobject_ids.iter_mut().for_each(|v| {
+            *v = v.iter().filter(|&id| !id.is_dead ).map(|id| *id).collect::<Vec<GameObjectId>>();
+        });
+        
         // draw gameobjects
         self.for_all_gameobjects(|_, go, scene| go.draw(&ctx, scene))?;
 

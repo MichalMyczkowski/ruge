@@ -32,8 +32,8 @@ impl IdManager {
                 self.taken += 1;
                 Ok(GameObjectId {
                     layer,
-                    idx: 0,
                     id: t,
+                    is_dead: false,
                 })
             }
             None => Err(GameError::GameLogicError("run out of GameObjectIds".into())),
@@ -78,7 +78,7 @@ mod tests {
         let mut im = IdManager::new(max_ids);
         im.free(GameObjectId {
             layer: 0,
-            idx: 0,
+            is_dead: false,
             id: 0,
         });
     }
