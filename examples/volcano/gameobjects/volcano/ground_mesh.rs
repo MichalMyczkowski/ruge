@@ -1,4 +1,5 @@
 use gl_utils::{CompiledProgram, Texture, primitives};
+use crate::gameobjects::light_proxy::LIGHT_BUFFER_BINDING_POINT;
 use crate::config::debug;
 
 
@@ -91,6 +92,7 @@ impl GroundMesh {
         self.program.bind_program();
         self.program.bind_vao();
         self.noise.bind_texture();
+        self.program.bind_uniform_to_block_idx("LightData", LIGHT_BUFFER_BINDING_POINT);
         unsafe {
             gl::Uniform1f(
                 self.program.get_uniform_location("time"),
