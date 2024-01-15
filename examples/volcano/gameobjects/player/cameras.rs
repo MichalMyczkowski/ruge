@@ -94,7 +94,7 @@ impl SideViewCam {
         camera.transform.rotate_euler(glm::Vec3::new(-PI/2.0, 0.0, 0.0), Space::World);
         Self {
             camera,
-            speed: 2.0,
+            speed: 7.0,
             fixed_height,
         }
     }
@@ -116,6 +116,23 @@ impl CameraObject for SideViewCam {
     fn update(&mut self, ctx: &Context, player_transform: &transform::Transform, is_active: bool) {
         let width = (ctx.window.width() as f32 / ctx.window.height() as f32) * self.fixed_height;
         self.camera.update_projection(width, self.fixed_height);
+        if is_active {
+            if ctx.input.kb.get_key(KeyCode::KeyLeft) || ctx.input.kb.get_key(KeyCode::KeyA) {
+                self.camera.transform.position_mut().x -= self.speed * ctx.time.delta_time() as f32;
+            }
+            if ctx.input.kb.get_key(KeyCode::KeyRight) || ctx.input.kb.get_key(KeyCode::KeyD) {
+                self.camera.transform.position_mut().x += self.speed * ctx.time.delta_time() as f32;
+            }
+            if ctx.input.kb.get_key(KeyCode::KeyUp) || ctx.input.kb.get_key(KeyCode::KeyW) {
+                self.camera.transform.position_mut().z -= self.speed * ctx.time.delta_time() as f32;
+            }
+            if ctx.input.kb.get_key(KeyCode::KeyDown) || ctx.input.kb.get_key(KeyCode::KeyS) {
+                self.camera.transform.position_mut().z += self.speed * ctx.time.delta_time() as f32;
+            }
+        } else {
+            self.camera.transform.position_mut().x = player_transform.position().x - width / 2.0;
+            self.camera.transform.position_mut().z = player_transform.position().z + self.fixed_height / 2.0;
+        }
     }
 }
 

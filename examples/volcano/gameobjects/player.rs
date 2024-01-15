@@ -180,7 +180,7 @@ impl GameObject for Player {
                 SideViewCam::new(
                     ctx.window.width() as f32,
                     ctx.window.height() as f32,
-                    120.0,
+                    20.0,
                 )
             ),
         );
