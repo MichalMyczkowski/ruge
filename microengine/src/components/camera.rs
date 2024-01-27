@@ -10,7 +10,7 @@ pub enum ProjectionType {
 
 pub struct Camera {
     pub transform: Transform,
-    projection: Projection,
+    pub projection: Projection,
     window_dim: (f32, f32),
 }
 
@@ -48,13 +48,29 @@ impl Camera {
             self.projection.update(width, height);
         }
     }
+
+    pub fn front(&self) -> glm::Vec3 {
+        self.transform.vector_to_world(&(-glm::Vec3::z()))
+    }
+
+    pub fn up(&self) -> glm::Vec3 {
+        self.transform.vector_to_world(&(glm::Vec3::y()))
+    }
+
+    pub fn right(&self) -> glm::Vec3 {
+        self.transform.vector_to_world(&(glm::Vec3::x()))
+    }
+
+    pub fn aspect(&self) -> f32 {
+        return self.window_dim.0 / self.window_dim.1;
+    }
 }
 
-struct Projection {
+pub struct Projection {
     pub p_type: ProjectionType,
+    pub z_near: f32,
+    pub z_far: f32,
     matrix: glm::Mat4,
-    z_near: f32,
-    z_far: f32,
 }
 
 impl Projection {
