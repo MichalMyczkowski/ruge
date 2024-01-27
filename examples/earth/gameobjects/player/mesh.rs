@@ -2,13 +2,11 @@ use gl_utils::{CompiledProgram, Texture, primitives};
 use crate::config::debug;
 
 
-const VERT_SHADER_PATH: &str = "./examples/3d_maze/gameobjects/player/shaders/player.vs";
-const FRAG_SHADER_PATH: &str = "./examples/3d_maze/gameobjects/player/shaders/player.fs";
-const TEXTURE_PATH: &str = "./examples/3d_maze/assets/gradient.png";
+const VERT_SHADER_PATH: &str = "./examples/earth/gameobjects/player/shaders/player.vs";
+const FRAG_SHADER_PATH: &str = "./examples/earth/gameobjects/player/shaders/player.fs";
 
 pub struct PlayerMesh{
     program: CompiledProgram,
-    texture: Texture,
     radius: f32,
     indices: usize,
 }
@@ -19,7 +17,6 @@ impl PlayerMesh {
         let sphere = primitives::Sphere::new(23, 17);
         let t = Self {
             program: CompiledProgram::new(VERT_SHADER_PATH, FRAG_SHADER_PATH),
-            texture: Texture::from(TEXTURE_PATH),
             radius,
             indices: sphere.indices.len(),
         };
@@ -60,11 +57,7 @@ impl PlayerMesh {
     pub fn draw(&self, mvp: glm::Mat4, time: f32) {
         self.program.bind_program();
         self.program.bind_vao();
-        self.texture.bind_texture();
         unsafe {
-            if debug() {
-                gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
-            }
             gl::Uniform1f(
                 self.program.get_uniform_location("time"),
                 time,
@@ -85,9 +78,6 @@ impl PlayerMesh {
                 gl::UNSIGNED_INT, 
                 0 as *const gl::types::GLvoid,
             );
-            if debug() {
-                gl::PolygonMode(gl::FRONT_AND_BACK, gl::FILL);
-            }
         }
     }
 }

@@ -26,6 +26,7 @@ pub fn earth_config() -> EarthConfig {
     let c = EarthConfig::parse();
     unsafe {
         DEBUG = c.debug;
+        gl::Enable(gl::CULL_FACE);
     }
     c
 }

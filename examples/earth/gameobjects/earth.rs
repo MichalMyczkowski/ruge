@@ -7,7 +7,6 @@ use crate::config::debug;
 
 use super::player::Player;
 use cube_face::CubeFace;
-use chunk::ChunkMesh;
 
 pub enum EarthShape {
     Sphere,
@@ -37,27 +36,26 @@ impl Earth {
         *t0.position_mut() += glm::Vec3::new(0.0, 0.0, 0.5);
         t0.rotate(glm::Vec3::x(), FRAC_PI_2, Space::World);
         *t1.position_mut() += glm::Vec3::new(0.5, 0.0, 0.0);
-        t1.rotate(glm::Vec3::z(), FRAC_PI_2, Space::World);
+        t1.rotate(glm::Vec3::z(), -FRAC_PI_2, Space::World);
         *t2.position_mut() += glm::Vec3::new(0.0, 0.5, 0.0);
 
         *t3.position_mut() -= glm::Vec3::new(0.0, 0.0, 0.5);
         t3.rotate(glm::Vec3::x(), FRAC_PI_2 * -1.0, Space::World);
         *t4.position_mut() -= glm::Vec3::new(0.5, 0.0, 0.0);
-        t4.rotate(glm::Vec3::z(), FRAC_PI_2 * -1.0, Space::World);
+        t4.rotate(glm::Vec3::z(), -FRAC_PI_2 * -1.0, Space::World);
         *t5.position_mut() -= glm::Vec3::new(0.0, 0.5, 0.0);
         t5.rotate(glm::Vec3::x(), PI, Space::World);
 
         let radius = 1.0;
-        let cube_map = [
-            CubeFace::new(&mut t0, radius),
-            CubeFace::new(&mut t1, radius),
-            CubeFace::new(&mut t2, radius),
-            CubeFace::new(&mut t3, radius),
-            CubeFace::new(&mut t4, radius),
-            CubeFace::new(&mut t5, radius),
-        ];
         Self {
-            cube_map,
+            cube_map: [
+                CubeFace::new(&mut t0, glm::Vec3::new(-0.5, 0.5, 0.5), glm::Vec3::x(), -glm::Vec3::y(), radius),
+                CubeFace::new(&mut t1, glm::Vec3::new(0.5, 0.5, -0.5), -glm::Vec3::y(), glm::Vec3::z(), radius),
+                CubeFace::new(&mut t2, glm::Vec3::new(-0.5, 0.5, -0.5), glm::Vec3::x(), glm::Vec3::z(), radius),
+                CubeFace::new(&mut t3, glm::Vec3::new(-0.5, -0.5, -0.5), glm::Vec3::x(), glm::Vec3::y(), radius),
+                CubeFace::new(&mut t4, glm::Vec3::new(-0.5, -0.5, -0.5), glm::Vec3::y(), glm::Vec3::z(), radius),
+                CubeFace::new(&mut t5, glm::Vec3::new(-0.5, -0.5, 0.5), glm::Vec3::x(), -glm::Vec3::z(), radius),
+            ],
             shape: EarthShape::Sphere,
             radius,
             transition_speed: 1.0,
@@ -108,11 +106,13 @@ impl GameObject for Earth {
 
     fn draw(&mut self, _ctx: &Context, scene: &Scene) -> GameResult {
         let player = scene.gameobject_by_id::<Player>(self.player_id.as_ref().unwrap()).unwrap();
+        let camera_pos = player.get_position();
+        let frustum = player.get_frustum();
         let mvp = player.active_camera().world_to_projection_matrix();
 
         let mix = Self::ease_in_out(self.lerp);
         for i in 0..6 {
-            self.cube_map[i].draw(&mvp, mix);
+            self.cube_map[i].draw(&mvp, camera_pos, frustum, mix);
         }
 
         Ok(())
