@@ -17,7 +17,7 @@ pub struct ChunkMesh {
 impl ChunkMesh {
 
     pub fn new(up: glm::Vec3, right: glm::Vec3, clr: glm::Vec3, radius: f32) -> Self {
-        let ground = primitives::Plane::new(2);
+        let ground = primitives::Plane::new(3);
         let t = Self {
             program: CompiledProgram::new(VERT_SHADER_PATH, FRAG_SHADER_PATH),
             indices: ground.indices.len(),

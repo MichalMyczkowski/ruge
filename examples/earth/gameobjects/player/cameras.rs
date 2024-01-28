@@ -118,7 +118,7 @@ impl ArcBallCam {
     pub fn new(width: f32, height: f32, sensitivity: f32, radius: f32) -> Self {
         let mut camera = Camera::new(
             ProjectionType::Perspective { fov: 45.0 },
-            0.6,
+            0.001,
             1000.0, 
             width, 
             height
@@ -190,19 +190,22 @@ impl CameraObject for ArcBallCam {
     }
     fn update(&mut self, ctx: &Context, is_active: bool) {
         self.camera.update_projection(ctx.window.width() as f32, ctx.window.height() as f32);
-        
+       
+        let mut radius_changed = false;
         // zoom in / zoom out
-        if ctx.input.kb.get_key_down(KeyCode::KeyUp) {
+        if ctx.input.kb.get_key(KeyCode::KeyUp) {
             self.radius += 1.0 * ctx.time.delta_time() as f32;
+            radius_changed = true;
         }
-        if ctx.input.kb.get_key_down(KeyCode::KeyDown) {
+        if ctx.input.kb.get_key(KeyCode::KeyDown) {
             self.radius -= 1.0 * ctx.time.delta_time() as f32;
+            radius_changed = true;
         }
         //self.friction = Self::ease_friction(self.radius);
         if is_active {
         // camera positioning 
         self.move_camera(ctx);
-        if self.speed.magnitude() > 0.0 {
+        if self.speed.magnitude() > 0.0 || radius_changed {
             let new_pos = self.from_center + self.speed;
             let rot_axis = glm::cross(
                 &self.from_center,

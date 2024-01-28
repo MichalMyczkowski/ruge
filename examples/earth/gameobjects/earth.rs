@@ -85,13 +85,15 @@ impl GameObject for Earth {
 
     fn draw(&mut self, _ctx: &Context, scene: &Scene) -> GameResult {
         let player = scene.gameobject_by_id::<Player>(self.player_id.as_ref().unwrap()).unwrap();
-        let camera_pos = player.get_position();
+        let camera = player.player_camera();
+        let camera_pos = camera.transform.position();
+        let camera_front = camera.front();
         let frustum = player.get_frustum();
         let mvp = player.active_camera().world_to_projection_matrix();
 
         let mix = Self::ease_in_out(self.lerp);
         for i in 0..6 {
-            self.cube_map[i].draw(&mvp, camera_pos, frustum, mix);
+            self.cube_map[i].draw(&mvp, camera_pos, &camera_front, frustum, mix);
         }
 
         Ok(())

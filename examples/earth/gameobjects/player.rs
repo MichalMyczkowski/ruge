@@ -61,8 +61,8 @@ impl Player {
         self.cameras[self.mode as usize].get_camera()
     }
 
-    pub fn get_position(&self) -> &glm::Vec3 {
-        self.cameras[Mode::ArcBall as usize].get_camera().transform.position()
+    pub fn player_camera(&self) -> &Camera {
+        self.cameras[Mode::ArcBall as usize].get_camera()
     }
 
     pub fn get_frustum(&self) -> &Frustum {
