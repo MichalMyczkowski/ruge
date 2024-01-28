@@ -9,28 +9,32 @@ pub struct ChunkMesh {
     program: CompiledProgram,
     indices: usize,
     radius: f32,
+    up: glm::Vec3,
+    right: glm::Vec3,
+    clr: glm::Vec3,
 }
 
 impl ChunkMesh {
 
-    pub fn new(transform: &mut Transform, radius: f32) -> Self {
-        let ground = primitives::Plane::new(20);
+    pub fn new(up: glm::Vec3, right: glm::Vec3, clr: glm::Vec3, radius: f32) -> Self {
+        let ground = primitives::Plane::new(2);
         let t = Self {
             program: CompiledProgram::new(VERT_SHADER_PATH, FRAG_SHADER_PATH),
             indices: ground.indices.len(),
             radius,
+            up,
+            right,
+            clr,
         };
-        t.set_buffers(ground, transform);
+        t.set_buffers(ground);
         t
     }
 
-    fn set_buffers(&self, ground: primitives::Plane, transform: &mut Transform) {
+    fn set_buffers(&self, ground: primitives::Plane) {
         let buffer = ground.verts.iter()
             .zip(ground.texture_coordinates.iter())
             .flat_map(|(vert, tex_coord)| { 
-                let mut vert = transform.local_to_world() * glm::vec3_to_vec4(&vert);
-                vert += glm::vec3_to_vec4(transform.position());
-                vec![vert.x, vert.y, vert.z, tex_coord.x, tex_coord.y]
+                vec![(vert.x + 1.0) * 0.5, vert.y, (vert.z + 1.0) * 0.5, tex_coord.x, tex_coord.y]
             })
             .collect::<Vec<f32>>();
         self.program.bind_buffers();
@@ -75,7 +79,7 @@ impl ChunkMesh {
         self.program.bind_vao();
     }
 
-    pub fn draw(&self, projection: &glm::Mat4, start_pos: &glm::Vec3, scale_vec: &glm::Vec3, mix: f32) {
+    pub fn draw(&self, projection: &glm::Mat4, start_pos: &glm::Vec3, mix: f32, width: f32) {
         unsafe {
             gl::Uniform3f(
                 self.program.get_uniform_location("start_pos"),
@@ -84,10 +88,26 @@ impl ChunkMesh {
                 start_pos.z,
             );
             gl::Uniform3f(
-                self.program.get_uniform_location("scale_vec"),
-                scale_vec.x,
-                scale_vec.y,
-                scale_vec.z,
+                self.program.get_uniform_location("up"),
+                self.up.x,
+                self.up.y,
+                self.up.z,
+            );
+            gl::Uniform3f(
+                self.program.get_uniform_location("right"),
+                self.right.x,
+                self.right.y,
+                self.right.z,
+            );
+            gl::Uniform3f(
+                self.program.get_uniform_location("clr"),
+                self.clr.x,
+                self.clr.y,
+                self.clr.z,
+            );
+            gl::Uniform1f(
+                self.program.get_uniform_location("width"),
+                width,
             );
             gl::Uniform1f(
                 self.program.get_uniform_location("mix_val"),

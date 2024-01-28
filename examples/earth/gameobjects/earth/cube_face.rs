@@ -4,8 +4,8 @@ use crate::gameobjects::player::frustum::Frustum;
 use super::chunk::ChunkMesh;
 
 struct QDrawing<'a> {
-    LOD: usize,
-    MAX_LOD: usize,
+    lod: usize,
+    max_lod: usize,
     mix: f32,
     projection: &'a glm::Mat4,
     camera_pos: &'a glm::Vec3,
@@ -17,17 +17,17 @@ pub struct CubeFace {
     start_pos: glm::Vec3,
     up: glm::Vec3,
     right: glm::Vec3,
-    radius: f32,
+    initial_width: f32,
 }
 
 impl CubeFace {
-    pub fn new(face_transform: &mut Transform, start_pos: glm::Vec3, right: glm::Vec3, up: glm::Vec3, radius: f32) -> Self {
+    pub fn new(start_pos: glm::Vec3, right: glm::Vec3, up: glm::Vec3, radius: f32, clr: glm::Vec3) -> Self {
         Self {
-            chunk: ChunkMesh::new(face_transform, radius),
+            chunk: ChunkMesh::new(up, right, clr, radius),
             start_pos,
             right,
             up,
-            radius,
+            initial_width: radius,
         }
     }
 
@@ -49,7 +49,7 @@ impl CubeFace {
             frustum.in_frustum(&(self.start_pos + self.right)) ||
             frustum.in_frustum(&(self.start_pos + self.up)) ||
             frustum.in_frustum(&(self.start_pos + self.right + self.up)) {
-            self.chunk.draw(projection, &glm::Vec3::zeros(), &glm::Vec3::new(1.0, 1.0, 1.0), mix);
+            self.chunk.draw(projection, &self.start_pos, mix, self.initial_width);
         }
     }
 }

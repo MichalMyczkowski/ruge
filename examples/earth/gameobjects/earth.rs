@@ -25,36 +25,15 @@ pub struct Earth {
 
 impl Earth {
     pub fn new() -> Self {
-        // transforms for cube walls
-        let mut t0 = Transform::default();
-        *t0.scale_mut() = glm::Vec3::new(0.5, 1.0, 0.5);
-        let mut t1 = t0.clone();
-        let mut t2 = t0.clone();
-        let mut t3 = t0.clone();
-        let mut t4 = t0.clone();
-        let mut t5 = t0.clone();
-        *t0.position_mut() += glm::Vec3::new(0.0, 0.0, 0.5);
-        t0.rotate(glm::Vec3::x(), FRAC_PI_2, Space::World);
-        *t1.position_mut() += glm::Vec3::new(0.5, 0.0, 0.0);
-        t1.rotate(glm::Vec3::z(), -FRAC_PI_2, Space::World);
-        *t2.position_mut() += glm::Vec3::new(0.0, 0.5, 0.0);
-
-        *t3.position_mut() -= glm::Vec3::new(0.0, 0.0, 0.5);
-        t3.rotate(glm::Vec3::x(), FRAC_PI_2 * -1.0, Space::World);
-        *t4.position_mut() -= glm::Vec3::new(0.5, 0.0, 0.0);
-        t4.rotate(glm::Vec3::z(), -FRAC_PI_2 * -1.0, Space::World);
-        *t5.position_mut() -= glm::Vec3::new(0.0, 0.5, 0.0);
-        t5.rotate(glm::Vec3::x(), PI, Space::World);
-
         let radius = 1.0;
         Self {
             cube_map: [
-                CubeFace::new(&mut t0, glm::Vec3::new(-0.5, 0.5, 0.5), glm::Vec3::x(), -glm::Vec3::y(), radius),
-                CubeFace::new(&mut t1, glm::Vec3::new(0.5, 0.5, -0.5), -glm::Vec3::y(), glm::Vec3::z(), radius),
-                CubeFace::new(&mut t2, glm::Vec3::new(-0.5, 0.5, -0.5), glm::Vec3::x(), glm::Vec3::z(), radius),
-                CubeFace::new(&mut t3, glm::Vec3::new(-0.5, -0.5, -0.5), glm::Vec3::x(), glm::Vec3::y(), radius),
-                CubeFace::new(&mut t4, glm::Vec3::new(-0.5, -0.5, -0.5), glm::Vec3::y(), glm::Vec3::z(), radius),
-                CubeFace::new(&mut t5, glm::Vec3::new(-0.5, -0.5, 0.5), glm::Vec3::x(), -glm::Vec3::z(), radius),
+                CubeFace::new(radius * glm::Vec3::new(-0.5, 0.5, 0.5), glm::Vec3::x(), -glm::Vec3::y(), radius , glm::Vec3::new(1.0, 0.0, 0.0)),
+                CubeFace::new(radius * glm::Vec3::new(0.5, 0.5, -0.5), -glm::Vec3::y(), glm::Vec3::z(), radius , glm::Vec3::new(0.0, 1.0, 0.0)),
+                CubeFace::new(radius * glm::Vec3::new(-0.5, 0.5, -0.5), glm::Vec3::x(), glm::Vec3::z(), radius , glm::Vec3::new(0.0, 0.0, 1.0)),
+                CubeFace::new(radius * glm::Vec3::new(-0.5, -0.5, -0.5), glm::Vec3::x(), glm::Vec3::y(), radius, glm::Vec3::new(1.0, 1.0, 0.0)),
+                CubeFace::new(radius * glm::Vec3::new(-0.5, -0.5, -0.5), glm::Vec3::y(), glm::Vec3::z(), radius, glm::Vec3::new(0.0, 1.0, 1.0)),
+                CubeFace::new(radius * glm::Vec3::new(-0.5, -0.5, 0.5), glm::Vec3::x(), -glm::Vec3::z(), radius, glm::Vec3::new(1.0, 0.0, 1.0)),
             ],
             shape: EarthShape::Sphere,
             radius,
