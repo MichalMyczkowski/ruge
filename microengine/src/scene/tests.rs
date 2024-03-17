@@ -46,21 +46,6 @@ fn empty_scene(max_ids: usize) -> Scene {
 }
 
 #[test]
-// TODO! this test has 0 sense as it is performed from scene owner perspective
-//fn scene_finds_gameobject_by_id() {
-//    assert!(true);
-//    //let mut scene = empty_scene(10);
-//    //let ctx = Context::default();
-//    //_ = scene.add_gameobject(TestGO::new(0, 0), 0);
-//    //let (x, y) = (1, 2);
-//    //let id = scene.add_gameobject(TestGO::new(x, y), 0).unwrap();
-//    //_ = scene.run_loop(&ctx, 0, false);
-//    //let returned = scene.gameobject_by_id::<TestGO>(&id).unwrap();
-//    //assert_eq!(returned.x(), x);
-//    //assert_eq!(returned.y(), y);
-//}
-
-#[test]
 fn scene_cant_instantiate_more_than_max_count_gameobjects() {
     let mut scene = empty_scene(1);
     _ = scene.add_gameobject(TestGO::new(0, 0), 0);

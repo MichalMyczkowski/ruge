@@ -2,7 +2,7 @@
 //! using OpenGL (gl crate) and GLFW (glfw crate)
 
 use crate::glfw::{Action, Context, Key};
-use crate::input::KeyState;
+
 use crate::timer::Timer;
 use crate::KeyCode;
 use crate::{error::GameResult, gl, glfw, input::Input, timer::GetTime, window::Window};
@@ -49,7 +49,6 @@ impl GLFWBackend {
             Some((mut w, events)) => {
                 w.set_pos(window.pos().0 as i32, window.pos().1 as i32);
                 gl::load_with(|s| w.get_proc_address(s) as *const _);
-                // TODO: do i need this?
                 unsafe {
                     gl::Enable(gl::BLEND);
                     gl::Enable(gl::DEPTH_TEST);
@@ -878,7 +877,7 @@ impl SystemEventFacade for GLFWBackend {
             }
             if !*window.fullscreen_requested.borrow() && fullscreen {
                 window.is_fullscreen = false;
-                window.system_update_resolution(self.windowed_width as usize, self.windowed_height as usize);
+                window.system_update_resolution(self.windowed_width, self.windowed_height);
                 self.window.set_monitor(
                     glfw::WindowMode::Windowed,
                     window.pos().0 as i32,

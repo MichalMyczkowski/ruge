@@ -1,5 +1,4 @@
 //! Scenes are basic building blocks of your game in microengine.
-//! They are basically dynamic sets of gameobjects representing what is going on right now
 
 pub(crate) mod idmanager;
 #[cfg(test)]
@@ -34,8 +33,8 @@ impl Scene {
             name: String::from(name),
             layers,
             first_loop: true, id_manager: RefCell::new(IdManager::new(max_gameobject_count)),
-            gameobjects: iter::repeat_with(|| HashMap::new()).take(layers).collect(),
-            gameobject_ids: iter::repeat_with(|| Vec::new()).take(layers).collect(),
+            gameobjects: iter::repeat_with(HashMap::new).take(layers).collect(),
+            gameobject_ids: iter::repeat_with(Vec::new).take(layers).collect(),
             new_gameobjects: RefCell::new(Vec::new()),
             disposable,
         }
@@ -112,7 +111,7 @@ impl Scene {
                         ))
                     }
                 };
-                f(id, &mut go, &self)?;
+                f(id, &mut go, self)?;
                 if !go.is_dead() {
                     self.gameobjects[layer].insert(id.id, Some(go));
                 } else {
@@ -124,7 +123,7 @@ impl Scene {
         Ok(())
     }
 
-    /// All gameobject methods are being run here in this very method (all but start())
+    /// All gameobject methods are being run here in this very method
     /// returns true if all gameobjects are finished.
     pub fn run_loop(&mut self, ctx: &mut Context) -> GameResult {
         // add newly created gameobjects
@@ -140,34 +139,34 @@ impl Scene {
                     )
                 );
             }
-            go.on_add(&ctx, &self, id)?;
+            go.on_add(ctx, self, id)?;
             self.gameobject_ids[id.layer].push(id);
             self.gameobjects[id.layer].insert(id.id, Some(go));
         }
         // run start
         if self.first_loop {
             self.first_loop = false;
-            self.for_all_gameobjects(|_, go, scene| go.start(&ctx, scene))?;
+            self.for_all_gameobjects(|_, go, scene| go.start(ctx, scene))?;
         }
 
         // run fixed_update
         for _ in 0..ctx.time.get_fixed_steps() {
-            self.for_all_gameobjects(|_, go, scene| go.fixed_update(&ctx, scene))?;
+            self.for_all_gameobjects(|_, go, scene| go.fixed_update(ctx, scene))?;
         }
 
         // run update
         self.for_all_gameobjects(|_, go, scene| {
-            go.update(&ctx, scene)?;
+            go.update(ctx, scene)?;
             Ok(())
         })?;
 
         // delete all dead gameobjects
         self.gameobject_ids.iter_mut().for_each(|v| {
-            *v = v.iter().filter(|&id| !id.is_dead ).map(|id| *id).collect::<Vec<GameObjectId>>();
+            *v = v.iter().filter(|&id| !id.is_dead ).copied().collect::<Vec<GameObjectId>>();
         });
         
         // draw gameobjects
-        self.for_all_gameobjects(|_, go, scene| go.draw(&ctx, scene))?;
+        self.for_all_gameobjects(|_, go, scene| go.draw(ctx, scene))?;
 
         Ok(())
     }

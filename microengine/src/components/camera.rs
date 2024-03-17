@@ -62,7 +62,7 @@ impl Camera {
     }
 
     pub fn aspect(&self) -> f32 {
-        return self.window_dim.0 / self.window_dim.1;
+        self.window_dim.0 / self.window_dim.1
     }
 }
 

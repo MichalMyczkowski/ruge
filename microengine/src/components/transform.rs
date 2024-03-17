@@ -61,8 +61,8 @@ impl Transform {
     pub fn calculate_local_to_world_matrix(&self) -> glm::Mat4 {
         let wrld = glm::translation(&self.position);
         let wrld = wrld * glm::quat_to_mat4(&self.rotation);
-        let wrld = glm::scale(&wrld, &self.scale);
-        wrld
+        
+        glm::scale(&wrld, &self.scale)
     }
     
     // TODO! should return reference!
@@ -102,12 +102,6 @@ impl Transform {
         self.rotation = self.rotation.normalize();
         self.changed = true;
     }
-
-    // /// Transforms a vector from world space to local space
-    // pub fn vector_to_local(&self, v: &glm::Vec3) -> glm::Vec3 {
-    //     // TODO!?
-    //     glm::quat_rotate_vec3(&self.rotation.conjugate(), v)
-    // }
 
     /// Transforms a vector from local space to world space
     pub fn vector_to_world(&self, v: &glm::Vec3) -> glm::Vec3 {
