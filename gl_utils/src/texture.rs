@@ -1,6 +1,6 @@
 use gl::types::*;
 use image::io::Reader as ImageReader;
-use image::{EncodableLayout, Rgba};
+use image::{EncodableLayout};
 
 pub struct Texture {
     texture_id: GLuint,
@@ -9,10 +9,10 @@ pub struct Texture {
 impl Texture {
     pub fn load_image(&self, img_src: &str) {
         let img = ImageReader::open(img_src)
-            .expect(&format!("Couldn't load '{}' texture file!", img_src));
+            .unwrap_or_else(|_| panic!("Couldn't load '{}' texture file!", img_src));
         let img = img
             .decode()
-            .expect(&format!("Couldn't decode '{}' texture file!", img_src));
+            .unwrap_or_else(|_| panic!("Couldn't decode '{}' texture file!", img_src));
         //let img = img.into_rgba8();
         let img = img.into_rgba8();
         let (w, h) = (img.width() as i32, img.height() as i32);

@@ -1,10 +1,12 @@
+/// This module is heavily "inspired" by tutorials found on: https://nercury.github.io/
+/// Provides a thin abstraction over Shader Programs (compiling, binding etc.)
 mod program;
 
 use gl::types::*;
 use program::{Program, Shader};
 use std::fs::File;
 use std::io::read_to_string;
-use std::iter;
+
 
 pub struct CompiledProgram {
     program: Program,
@@ -34,8 +36,8 @@ impl CompiledProgram {
     }
 
     fn compile_shaders(vs_path: &str, fs_path: &str) -> Program {
-        let vs = File::open(vs_path).expect(&format!("Missing vertex shader file: {}", vs_path));
-        let fs = File::open(fs_path).expect(&format!("Missing fragment shader file: {}", fs_path));
+        let vs = File::open(vs_path).unwrap_or_else(|_| panic!("Missing vertex shader file: {}", vs_path));
+        let fs = File::open(fs_path).unwrap_or_else(|_| panic!("Missing fragment shader file: {}", fs_path));
         let vs = read_to_string(vs).unwrap();
         let fs = read_to_string(fs).unwrap();
         let vs = Shader::from_source(&vs, gl::VERTEX_SHADER).unwrap();

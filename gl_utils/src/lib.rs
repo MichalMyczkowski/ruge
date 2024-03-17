@@ -1,3 +1,4 @@
+/// This package contains some basic, safe abstractions over OpenGL API
 mod compiled_program;
 mod texture;
 pub mod primitives;

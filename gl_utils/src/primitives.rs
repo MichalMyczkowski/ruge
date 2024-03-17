@@ -1,3 +1,4 @@
+/// This module provides VBOs for primitive 3D shapes
 pub mod cube;
 pub mod sphere;
 pub mod plane;

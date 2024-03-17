@@ -141,7 +141,7 @@ impl SolidOfRevolution {
         // normal vectors calculation borrowed from: https://iquilezles.org/articles/normals/
         let mut normals = repeat(glm::Vec3::zeros()).take(verts.len()).collect::<Vec<glm::Vec3>>();
         indices.chunks(3).for_each(|tri| {
-            let idx_a = *tri.get(0).unwrap() as usize;
+            let idx_a = *tri.first().unwrap() as usize;
             let idx_b = *tri.get(1).unwrap() as usize;
             let idx_c = *tri.get(2).unwrap() as usize;
 
