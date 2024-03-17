@@ -24,3 +24,7 @@ cargo run --example [EXAMPLE_NAME]
 ```
 
 ## Screenshots:
+
+![rotating_cube](https://github.com/MichalMyczkowski/ruge/assets/63677127/50a30e14-b512-437e-b997-584e500843fb)
+![3d_maze](https://github.com/MichalMyczkowski/ruge/assets/63677127/57f84fb5-9387-4aac-83b9-a73bb73e1a88)
+![volcano](https://github.com/MichalMyczkowski/ruge/assets/63677127/3d44abe8-8bcd-4e7c-9df8-1cd33e2bd694)
