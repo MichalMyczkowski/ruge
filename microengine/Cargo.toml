@@ -9,4 +9,3 @@ edition = "2021"
 gl = "0.14.0"
 glfw = "*"
 nalgebra-glm = "0.18.0"
-microengine_macros = { path = "../microengine_macros" }
