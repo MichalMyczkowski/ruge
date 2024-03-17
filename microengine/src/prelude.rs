@@ -1,5 +1,6 @@
 /// Most of the stuff you need to implement gameobjects
 
+pub use microengine_macros::GameObject;
 pub use crate::gameobject::{GameObject, GameObjectId};
 pub use crate::scene::Scene;
 pub use crate::context::Context;

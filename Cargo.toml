@@ -9,7 +9,7 @@ edition = "2021"
 resolver = "2"
 members = [
     "microengine",
-    "gl_utils",
+    "gl_utils", "microengine_macros",
 ]
 
 [dependencies]
