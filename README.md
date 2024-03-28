@@ -1,5 +1,4 @@
-
-<img src="https://github.com/MichalMyczkowski/ruge/assets/63677127/99a8e4f7-85e1-4766-9197-73ad5bc0760e" width="210" height="60">
+<img src="https://github.com/MichalMyczkowski/ruge/assets/63677127/10059e2a-846b-4bb3-80ee-7557883864af" width="210" height="60">
 
 # Rust micro game engine
 
